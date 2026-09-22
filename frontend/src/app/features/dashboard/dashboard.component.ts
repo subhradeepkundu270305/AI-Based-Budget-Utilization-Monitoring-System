@@ -10,14 +10,13 @@ import { HeatmapComponent } from './heatmap.component';
 import { StateDataService, StateData } from '../../core/state-data.service';
 import { FinoraService } from '../../core/finora.service';
 import { CommonModule } from '@angular/common';
-import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [BaseChartDirective, InrPipe, StatusBannerComponent, HeatmapComponent, CommonModule, HoverTiltDirective, RouterModule],
+  imports: [BaseChartDirective, InrPipe, StatusBannerComponent, HeatmapComponent, CommonModule, RouterModule],
   template: `
     <!-- ═══════════════════════════════════════════════════════
          NATIONAL OVERVIEW VIEW
