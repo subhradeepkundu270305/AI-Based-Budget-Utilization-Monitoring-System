@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, inject, HostListener, OnInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, inject, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../core/api.service';
@@ -9,6 +9,7 @@ interface ChatMessage {
   text: string;
   sender: 'user' | 'bot';
   time: string;
+  isTyping?: boolean;
 }
 
 @Component({
@@ -102,19 +103,23 @@ interface ChatMessage {
                 <div class="chat-message-row" [class.user]="msg.sender === 'user'" [class.bot]="msg.sender === 'bot'">
                   @if (msg.sender === 'bot') {
                     <div class="msg-bot-avatar">
-                      <img src="assets/finora.png" alt="Finora" />
+                      <img src="assets/finora.png" alt="Finora" (error)="onAvatarError($event)" />
                     </div>
                   }
                   <div class="chat-message-bubble">
-                    <div class="message-text">{{ msg.text }}</div>
+                    <div class="message-text">
+                      <span [innerHTML]="formatMessage(msg.text)"></span>
+                      <span *ngIf="msg.isTyping" class="ai-typing-cursor">▌</span>
+                    </div>
                     <div class="message-footer">
                       <span class="message-time">{{ msg.time }}</span>
                       @if (msg.sender === 'bot') {
-                        <button class="copy-btn" (click)="copyText(msg.text)" title="Copy text">
-                          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <button class="copy-btn" (click)="copyText(msg.text, $index)" title="Copy text">
+                          <svg *ngIf="copiedIndex !== $index" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                           </svg>
+                          <span *ngIf="copiedIndex === $index" class="copied-badge">Copied ✓</span>
                         </button>
                       }
                     </div>
@@ -125,16 +130,17 @@ interface ChatMessage {
               <!-- Loading / Typing Indicator -->
               @if (loading) {
                 <div class="chat-message-row bot animate-fade-in">
-                  <div class="msg-bot-avatar">
-                    <img src="assets/finora.png" alt="Finora" />
+                  <div class="msg-bot-avatar avatar-thinking">
+                    <img src="assets/finora.png" alt="Finora" (error)="onAvatarError($event)" />
+                    <div class="avatar-thinking-aura"></div>
                   </div>
                   <div class="chat-message-bubble typing-bubble">
-                    <div class="typing-dots">
-                      <span></span>
-                      <span></span>
-                      <span></span>
+                    <div class="typing-wave">
+                      <span class="typing-dot dot-1"></span>
+                      <span class="typing-dot dot-2"></span>
+                      <span class="typing-dot dot-3"></span>
                     </div>
-                    <span class="typing-text">Finora is analyzing fiscal telemetry...</span>
+                    <span class="typing-text">Finora is analyzing fiscal telemetry…</span>
                   </div>
                 </div>
               }
@@ -670,33 +676,77 @@ interface ChatMessage {
     .copy-btn:hover {
       color: var(--color-primary);
     }
+    .copied-badge {
+      font-size: 0.68rem;
+      color: #059669;
+      font-weight: 700;
+      animation: messageSlideIn 0.2s ease-out;
+    }
 
     /* Typing indicator */
     .typing-bubble {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 18px;
+      background: #FFFFFF;
+      border: 1px solid rgba(13, 148, 136, 0.25);
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 4px 14px rgba(8, 62, 72, 0.08);
+    }
+    .typing-wave {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      background: #fff;
+      gap: 5px;
+      height: 16px;
     }
-    .typing-dots {
-      display: flex;
-      gap: 4px;
+    .typing-dot {
+      display: inline-block !important;
+      width: 7px !important;
+      height: 7px !important;
+      background: linear-gradient(135deg, #0D9488, #10B981) !important;
+      border-radius: 50% !important;
+      animation: dotBounce 1.25s infinite ease-in-out both;
+      box-shadow: 0 0 6px rgba(13, 148, 136, 0.45);
     }
-    .typing-dots span {
-      width: 6px;
-      height: 6px;
-      background: var(--color-primary);
+    .dot-1 { animation-delay: -0.32s; }
+    .dot-2 { animation-delay: -0.16s; }
+    .dot-3 { animation-delay: 0s; }
+
+    .msg-bot-avatar.avatar-thinking {
+      position: relative;
+    }
+    .avatar-thinking-aura {
+      position: absolute;
+      inset: -4px;
       border-radius: 50%;
-      animation: dotBounce 1.4s infinite ease-in-out both;
+      border: 2px solid #2DD4BF;
+      animation: pulseRadar 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+      pointer-events: none;
     }
-    .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
-    .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
     .typing-text {
-      font-size: 0.78rem;
-      color: #64748B;
-      font-weight: 500;
+      font-size: 0.8rem;
+      color: #0F766E;
+      font-weight: 600;
       font-style: italic;
+      letter-spacing: 0.01em;
+    }
+
+    /* Live AI Typing Cursor */
+    .ai-typing-cursor {
+      display: inline-block;
+      color: var(--color-primary);
+      font-weight: 900;
+      font-size: 0.92rem;
+      margin-left: 2px;
+      animation: cursorBlink 0.65s infinite;
+      vertical-align: baseline;
+    }
+    @keyframes cursorBlink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
     }
 
     /* Input Bar */
@@ -808,8 +858,14 @@ interface ChatMessage {
       }
     }
     @keyframes dotBounce {
-      0%, 80%, 100% { transform: scale(0); }
-      40% { transform: scale(1.0); }
+      0%, 80%, 100% {
+        transform: translateY(0) scale(0.4);
+        opacity: 0.35;
+      }
+      40% {
+        transform: translateY(-6px) scale(1.15);
+        opacity: 1;
+      }
     }
 
     @media (max-width: 768px) {
@@ -823,7 +879,7 @@ interface ChatMessage {
     }
   `]
 })
-export class ChatBubbleComponent implements OnInit {
+export class ChatBubbleComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
   private auth = inject(AuthService);
   private finoraService = inject(FinoraService);
@@ -834,6 +890,8 @@ export class ChatBubbleComponent implements OnInit {
   loading = false;
   currentMessage = '';
   messages: ChatMessage[] = [];
+  copiedIndex: number | null = null;
+  private typingInterval: any = null;
 
   ngOnInit() {
     this.finoraService.scanRequest.subscribe(event => {
@@ -841,8 +899,65 @@ export class ChatBubbleComponent implements OnInit {
     });
   }
 
+  ngOnDestroy() {
+    this.stopTypingIfActive();
+  }
+
+  formatMessage(text: string): string {
+    if (!text) return '';
+    let safe = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    return safe;
+  }
+
+  private stopTypingIfActive() {
+    if (this.typingInterval) {
+      clearInterval(this.typingInterval);
+      this.typingInterval = null;
+      for (const m of this.messages) {
+        m.isTyping = false;
+      }
+    }
+  }
+
+  private streamBotMessage(fullText: string, time: string) {
+    this.stopTypingIfActive();
+
+    const botMsg: ChatMessage = {
+      text: '',
+      sender: 'bot',
+      time,
+      isTyping: true
+    };
+    this.messages.push(botMsg);
+    this.scrollToBottom();
+
+    // Split into words, whitespace, bullets & newlines to preserve complete structure
+    const tokens = fullText.match(/(\s+|\S+)/g) || [fullText];
+    let tokenIndex = 0;
+
+    this.typingInterval = setInterval(() => {
+      if (tokenIndex < tokens.length) {
+        const batch = tokens.slice(tokenIndex, tokenIndex + 2).join('');
+        botMsg.text += batch;
+        tokenIndex += 2;
+        this.scrollToBottom();
+      } else {
+        botMsg.text = fullText;
+        botMsg.isTyping = false;
+        clearInterval(this.typingInterval);
+        this.typingInterval = null;
+        this.scrollToBottom();
+      }
+    }, 18);
+  }
+
   handleStateScanEvent(event: StateScanSummaryEvent) {
     this.isOpen = true;
+    this.stopTypingIfActive();
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     this.messages.push({
       text: `✨ Telemetry Scan: Generate AI summary for ${event.state.name}`,
@@ -862,14 +977,12 @@ export class ChatBubbleComponent implements OnInit {
         const finalReply = res.reply && !res.reply.includes('offline mode') && !res.reply.includes('trouble connecting')
           ? res.reply
           : this.generateSynthesisParagraph(state);
-        this.messages.push({ text: finalReply, sender: 'bot', time: botTime });
-        this.scrollToBottom();
+        this.streamBotMessage(finalReply, botTime);
       },
       error: () => {
         this.loading = false;
         const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        this.messages.push({ text: this.generateSynthesisParagraph(state), sender: 'bot', time: botTime });
-        this.scrollToBottom();
+        this.streamBotMessage(this.generateSynthesisParagraph(state), botTime);
       }
     });
   }
@@ -901,6 +1014,7 @@ export class ChatBubbleComponent implements OnInit {
   }
 
   resetChat() {
+    this.stopTypingIfActive();
     this.messages = [];
   }
 
@@ -914,6 +1028,7 @@ export class ChatBubbleComponent implements OnInit {
     const text = this.currentMessage.trim();
     if (!text) return;
 
+    this.stopTypingIfActive();
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     this.messages.push({ text, sender: 'user', time });
     this.currentMessage = '';
@@ -924,24 +1039,29 @@ export class ChatBubbleComponent implements OnInit {
       next: (res) => {
         this.loading = false;
         const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        this.messages.push({ text: res.reply, sender: 'bot', time: botTime });
-        this.scrollToBottom();
+        this.streamBotMessage(res.reply, botTime);
       },
       error: () => {
         this.loading = false;
         const botTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        this.messages.push({ 
-          text: 'Finora service telemetry: Unable to connect to fiscal intelligence gateway. Please verify backend connectivity.', 
-          sender: 'bot',
-          time: botTime 
-        });
-        this.scrollToBottom();
+        this.streamBotMessage(
+          'Finora service telemetry: Unable to connect to fiscal intelligence gateway. Please verify backend connectivity.',
+          botTime
+        );
       }
     });
   }
 
-  copyText(text: string) {
+  copyText(text: string, index?: number) {
     navigator.clipboard?.writeText(text);
+    if (index !== undefined) {
+      this.copiedIndex = index;
+      setTimeout(() => {
+        if (this.copiedIndex === index) {
+          this.copiedIndex = null;
+        }
+      }, 1600);
+    }
   }
 
   onAvatarError(event: Event) {
