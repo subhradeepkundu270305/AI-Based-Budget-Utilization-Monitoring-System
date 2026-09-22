@@ -3148,44 +3148,54 @@ export interface SchemeTelemetry {
     /* ══ SCHEME TELEMETRY MODAL ══ */
     .scheme-modal-backdrop {
       position: fixed;
-      inset: 0;
-      background: rgba(8, 30, 36, 0.8);
-      backdrop-filter: blur(10px);
-      z-index: 1000;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(8, 30, 36, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 999999 !important;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 20px;
       overflow-y: auto;
+      box-sizing: border-box;
     }
 
     .scheme-modal-glass {
       background: #FFFFFF;
-      border: 1px solid rgba(13, 148, 136, 0.3);
-      border-radius: 24px;
+      border: 1px solid rgba(13, 148, 136, 0.35);
+      border-radius: 20px;
       max-width: 960px;
       width: 100%;
-      max-height: 90vh;
+      max-height: calc(100vh - 40px);
       display: flex;
       flex-direction: column;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
       overflow: hidden;
-      animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      margin: auto;
+      animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
     }
 
     @keyframes modalSlideUp {
-      from { opacity: 0; transform: translateY(24px) scale(0.98); }
+      from { opacity: 0; transform: translateY(20px) scale(0.98); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .scheme-modal-header {
-      padding: 24px 28px;
+      padding: 18px 24px;
       background: linear-gradient(135deg, #083E48 0%, #0A4F5C 100%);
       color: #FFFFFF;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 20px;
+      gap: 16px;
+      flex-shrink: 0;
     }
 
     .scheme-code-badge {
@@ -3198,15 +3208,15 @@ export interface SchemeTelemetry {
       color: #5EEAD4;
       background: rgba(13, 148, 136, 0.35);
       border: 1px solid rgba(45, 212, 191, 0.4);
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: 6px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .scheme-modal-title {
-      font-size: 1.55rem;
+      font-size: 1.4rem;
       font-weight: 800;
-      margin: 0 0 8px;
+      margin: 0 0 6px;
       line-height: 1.25;
       color: #FFFFFF;
     }
@@ -3216,7 +3226,7 @@ export interface SchemeTelemetry {
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: #CCFBF1;
     }
 
@@ -3235,8 +3245,8 @@ export interface SchemeTelemetry {
       background: rgba(255, 255, 255, 0.15);
       border: 1px solid rgba(255, 255, 255, 0.25);
       color: #FFFFFF;
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       cursor: pointer;
       font-size: 1.1rem;
@@ -3255,31 +3265,32 @@ export interface SchemeTelemetry {
     .scheme-kpi-banner {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      padding: 20px 28px;
+      gap: 12px;
+      padding: 12px 24px;
       background: #F8FAFC;
       border-bottom: 1px solid #E2E8F0;
+      flex-shrink: 0;
     }
 
     .kpi-banner-card {
       background: #FFFFFF;
-      border-radius: 14px;
-      padding: 14px 16px;
+      border-radius: 12px;
+      padding: 10px 14px;
       border: 1px solid rgba(13, 148, 136, 0.15);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
     }
 
     .kpi-banner-label {
-      font-size: 0.66rem;
+      font-size: 0.64rem;
       font-weight: 800;
       color: #64748B;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .kpi-banner-value {
-      font-size: 1.35rem;
+      font-size: 1.22rem;
       font-weight: 800;
       color: #0F172A;
       line-height: 1.2;
@@ -3290,9 +3301,9 @@ export interface SchemeTelemetry {
     }
 
     .kpi-banner-sub {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: #64748B;
-      margin-top: 4px;
+      margin-top: 3px;
       display: block;
     }
 
@@ -3300,17 +3311,18 @@ export interface SchemeTelemetry {
       display: flex;
       border-bottom: 1px solid #E2E8F0;
       background: #FFFFFF;
-      padding: 0 28px;
-      gap: 8px;
+      padding: 0 24px;
+      gap: 6px;
       overflow-x: auto;
+      flex-shrink: 0;
     }
 
     .scheme-tab-btn {
-      padding: 14px 18px;
+      padding: 11px 16px;
       background: none;
       border: none;
       border-bottom: 3px solid transparent;
-      font-size: 0.86rem;
+      font-size: 0.84rem;
       font-weight: 700;
       color: #64748B;
       cursor: pointer;
@@ -3332,9 +3344,10 @@ export interface SchemeTelemetry {
     }
 
     .scheme-modal-body {
-      padding: 24px 28px;
+      padding: 20px 24px;
       overflow-y: auto;
-      flex: 1;
+      flex: 1 1 auto;
+      min-height: 0;
     }
 
     .pane-headline {
@@ -3690,6 +3703,7 @@ export interface SchemeTelemetry {
       justify-content: space-between;
       align-items: center;
       gap: 16px;
+      flex-shrink: 0;
     }
 
     .footer-left-info {
@@ -3746,7 +3760,7 @@ export interface SchemeTelemetry {
       background: rgba(3, 31, 36, 0.75);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      z-index: 9999;
+      z-index: 999999 !important;
       display: flex;
       align-items: center;
       justify-content: center;
