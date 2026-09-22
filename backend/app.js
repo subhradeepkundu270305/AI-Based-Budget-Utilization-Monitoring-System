@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -39,6 +40,17 @@ function createApp(env = loadEnv()) {
   app.use("/api/reports", createReportRouter(env));
   app.use("/api/admin", createAdminRouter(env));
   app.use("/api/chat", createChatRouter(env));
+
+  // Serve static Angular SPA client if built
+  const clientDist = path.resolve(__dirname, "../frontend/dist/frontend/browser");
+  if (fs.existsSync(clientDist)) {
+    app.use(express.static(clientDist));
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api") || req.path.startsWith("/uploads")) return next();
+      res.sendFile(path.join(clientDist, "index.html"));
+    });
+  }
+
   app.use(notFound);
   app.use(errorHandler(env));
 

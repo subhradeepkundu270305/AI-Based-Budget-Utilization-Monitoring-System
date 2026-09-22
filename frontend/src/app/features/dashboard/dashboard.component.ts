@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
@@ -12,6 +12,23 @@ import { FinoraService } from '../../core/finora.service';
 import { CommonModule } from '@angular/common';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+
+// 3D Soft Shadow & Depth Plugin for Chart.js
+const chart3dEffectsPlugin = {
+  id: 'chart3dEffects',
+  beforeDatasetsDraw(chart: any) {
+    const { ctx } = chart;
+    ctx.save();
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.14)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 4;
+    ctx.shadowOffsetX = 1;
+  },
+  afterDatasetsDraw(chart: any) {
+    const { ctx } = chart;
+    ctx.restore();
+  }
+};
 
 @Component({
   selector: 'app-dashboard',
@@ -63,26 +80,220 @@ import html2canvas from 'html2canvas';
         <app-heatmap (openStateReport)="onSelectStateReport($event)"></app-heatmap>
       </section>
 
-      <!-- Expanded Analytics Grid -->
-      <section class="chart-grid">
-        <article class="card hover-tilt animate-fade-in-up delay-300">
-          <h2>Monthly Expenditure Velocity</h2>
-          <canvas baseChart [type]="'bar'" [data]="barData" [options]="barOptions"></canvas>
+      <!-- Expanded 3D Analytics Grid -->
+      <section class="chart-grid-3d">
+        <!-- 1. Monthly Expenditure Velocity -->
+        <article class="chart-card-3d animate-fade-in-up delay-300" data-chart-id="velocity" [class.is-extruded]="selectedVelocityIdx !== null">
+          <div class="chart-card-top">
+            <div class="chart-title-group">
+              <div class="chart-badge-3d velocity-badge">
+                <span class="pulse-dot"></span>
+                <span>VELOCITY 3D</span>
+              </div>
+              <h2>Monthly Expenditure Velocity</h2>
+              <p class="chart-sub">Absorption pace & macro disbursement velocity across Union Ministries</p>
+            </div>
+            <div class="chart-toolbar-3d">
+              <button class="btn-3d-action" (click)="replayVelocity()" title="Replay 3D Wave Growth">
+                <span class="btn-icon" [class.spin]="isReplayingVelocity">↻</span>
+                <span>Replay Wave</span>
+              </button>
+              <span class="depth-badge">⚡ 3D Active</span>
+            </div>
+          </div>
+          
+          <!-- 3D Extrusion Telemetry HUD Banner (Appears when bar is clicked) -->
+          @if (selectedVelocityBar) {
+            <div class="extrusion-hud animate-pop-in">
+              <div class="hud-item">
+                <span class="hud-lbl">ELEVATED MONTH</span>
+                <span class="hud-val text-accent">{{ selectedVelocityBar.month }}</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-lbl">ACTUAL DISBURSED</span>
+                <span class="hud-val">{{ selectedVelocityBar.spent | inr }}</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-lbl">3D EXTRUSION LEAP</span>
+                <span class="hud-tag">▲ +{{ selectedVelocityBar.growthPct }}% Dynamic Lift</span>
+              </div>
+              <button class="hud-dismiss" (click)="resetVelocityExtrusion()">✕ Reset Elevation</button>
+            </div>
+          } @else {
+            <div class="click-hint-banner">
+              <span>💡 Click any bar to extrude 3D elevation upwards & view velocity breakdown</span>
+            </div>
+          }
+
+          <div class="canvas-3d-stage">
+            <div class="ambient-glow-ground velocity-glow"></div>
+            <canvas baseChart [type]="'bar'" [data]="barData" [options]="barOptions" [plugins]="chartPlugins" (chartClick)="onVelocityChartClick($event)"></canvas>
+          </div>
         </article>
-        
-        <article class="card hover-tilt animate-fade-in-up delay-300">
-          <h2>Utilization Trend (vs Ideal Pace)</h2>
-          <canvas baseChart [type]="'line'" [data]="lineData" [options]="lineOptions"></canvas>
+
+        <!-- 2. Utilization Trend (vs Ideal Pace) -->
+        <article class="chart-card-3d animate-fade-in-up delay-300" data-chart-id="trend">
+          <div class="chart-card-top">
+            <div class="chart-title-group">
+              <div class="chart-badge-3d trend-badge">
+                <span class="pulse-dot"></span>
+                <span>PACE 3D</span>
+              </div>
+              <h2>Utilization Trend (vs Ideal Pace)</h2>
+              <p class="chart-sub">Cumulative expenditure trajectory vs 8.33%/month linear benchmark</p>
+            </div>
+            <div class="chart-toolbar-3d">
+              <button class="btn-3d-action" (click)="replayTrend()" title="Replay 3D Draw Wave">
+                <span class="btn-icon" [class.spin]="isReplayingTrend">↻</span>
+                <span>Replay Pace</span>
+              </button>
+              <span class="depth-badge">🎯 Benchmarked</span>
+            </div>
+          </div>
+
+          @if (selectedTrendPoint) {
+            <div class="extrusion-hud animate-pop-in">
+              <div class="hud-item">
+                <span class="hud-lbl">INSPECTED MONTH</span>
+                <span class="hud-val text-accent">{{ selectedTrendPoint.month }}</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-lbl">ACTUAL TRAJECTORY</span>
+                <span class="hud-val">{{ selectedTrendPoint.actual.toFixed(1) }}%</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-lbl">IDEAL BENCHMARK</span>
+                <span class="hud-val">{{ selectedTrendPoint.ideal.toFixed(1) }}%</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-lbl">VARIANCE DELTA</span>
+                <span class="hud-tag" [class.negative]="selectedTrendPoint.variance < 0">
+                  {{ selectedTrendPoint.variance >= 0 ? '▲ +' : '▼ ' }}{{ selectedTrendPoint.variance.toFixed(1) }}%
+                </span>
+              </div>
+              <button class="hud-dismiss" (click)="selectedTrendPoint = null">✕ Close</button>
+            </div>
+          } @else {
+            <div class="click-hint-banner">
+              <span>💡 Click any vertex node to compare actual pace vs ideal benchmark</span>
+            </div>
+          }
+
+          <div class="canvas-3d-stage">
+            <div class="ambient-glow-ground trend-glow"></div>
+            <canvas baseChart [type]="'line'" [data]="lineData" [options]="lineOptions" [plugins]="chartPlugins" (chartClick)="onTrendChartClick($event)"></canvas>
+          </div>
         </article>
-        
-        <article class="card hover-tilt animate-fade-in-up delay-400">
-          <h2>Top & Bottom States (by %)</h2>
-          <canvas baseChart [type]="'bar'" [data]="topStatesData" [options]="horizontalBarOptions"></canvas>
+
+        <!-- 3. Top & Bottom States (by %) -->
+        <article class="chart-card-3d animate-fade-in-up delay-400" data-chart-id="states">
+          <div class="chart-card-top">
+            <div class="chart-title-group">
+              <div class="chart-badge-3d states-badge">
+                <span class="pulse-dot"></span>
+                <span>REGIONAL 3D</span>
+              </div>
+              <h2>Top & Bottom States (by %)</h2>
+              <p class="chart-sub">Extremes in fund absorption performance across Indian States & UTs</p>
+            </div>
+            <div class="chart-toolbar-3d">
+              <button class="btn-3d-action" (click)="replayStates()" title="Replay 3D Horizontal Bars">
+                <span class="btn-icon" [class.spin]="isReplayingStates">↻</span>
+                <span>Replay Bars</span>
+              </button>
+              <span class="depth-badge">🏛️ 36 Regions</span>
+            </div>
+          </div>
+
+          @if (selectedStateBar) {
+            <div class="extrusion-hud animate-pop-in">
+              <div class="hud-item">
+                <span class="hud-lbl">SELECTED STATE</span>
+                <span class="hud-val text-accent">{{ selectedStateBar.name }}</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-lbl">UTILIZATION</span>
+                <span class="hud-val">{{ selectedStateBar.utilizationPct }}%</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-lbl">PACE BENCHMARK</span>
+                <span class="hud-tag" [ngClass]="getRiskClass(selectedStateBar.utilizationPct)">
+                  {{ getRiskLabel(selectedStateBar.utilizationPct) }}
+                </span>
+              </div>
+              <button class="btn-deepdive-action" (click)="onSelectStateReport(selectedStateBar)">
+                Open 5-Yr Deep Dive →
+              </button>
+              <button class="hud-dismiss" (click)="selectedStateBar = null">✕</button>
+            </div>
+          } @else {
+            <div class="click-hint-banner">
+              <span>💡 Click any state bar to highlight absorption pace & open its ledger</span>
+            </div>
+          }
+
+          <div class="canvas-3d-stage">
+            <div class="ambient-glow-ground states-glow"></div>
+            <canvas baseChart [type]="'bar'" [data]="topStatesData" [options]="horizontalBarOptions" [plugins]="chartPlugins" (chartClick)="onStatesChartClick($event)"></canvas>
+          </div>
         </article>
-        
-        <article class="card hover-tilt animate-fade-in-up delay-400">
-          <h2>Spend by Category</h2>
-          <canvas baseChart [type]="'doughnut'" [data]="pieCatData" [options]="pieOptions"></canvas>
+
+        <!-- 4. Spend by Category -->
+        <article class="chart-card-3d animate-fade-in-up delay-400" data-chart-id="category">
+          <div class="chart-card-top">
+            <div class="chart-title-group">
+              <div class="chart-badge-3d category-badge">
+                <span class="pulse-dot"></span>
+                <span>SECTORS 3D</span>
+              </div>
+              <h2>Spend by Category</h2>
+              <p class="chart-sub">Sovereign allocation breakdown across vital national sectors</p>
+            </div>
+            <div class="chart-toolbar-3d">
+              <button class="btn-3d-action" (click)="replayCategory()" title="Replay 3D Doughnut Rotate">
+                <span class="btn-icon" [class.spin]="isReplayingCategory">↻</span>
+                <span>Replay Torus</span>
+              </button>
+              <span class="depth-badge">🥧 Torus 3D</span>
+            </div>
+          </div>
+
+          @if (selectedCategorySlice) {
+            <div class="extrusion-hud animate-pop-in">
+              <div class="hud-item">
+                <span class="hud-lbl">EXPLODED SECTOR</span>
+                <span class="hud-val text-accent">{{ selectedCategorySlice.name }}</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-lbl">TOTAL EXPENDITURE</span>
+                <span class="hud-val">{{ selectedCategorySlice.spent | inr }}</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-lbl">SECTOR SHARE</span>
+                <span class="hud-tag">✦ {{ selectedCategorySlice.pct }}% Total Spend</span>
+              </div>
+              <button class="hud-dismiss" (click)="resetCategorySlice()">✕ Reset Orbit</button>
+            </div>
+          } @else {
+            <div class="click-hint-banner">
+              <span>💡 Hover or click any sector arc to pop it out in 3D orbit</span>
+            </div>
+          }
+
+          <div class="canvas-3d-stage doughnut-stage">
+            <div class="ambient-glow-ground cat-glow"></div>
+            <div class="doughnut-container">
+              <canvas baseChart [type]="'doughnut'" [data]="pieCatData" [options]="pieOptions" [plugins]="chartPlugins" (chartClick)="onCategoryChartClick($event)" (chartHover)="onCategoryChartHover($event)"></canvas>
+              
+              <!-- Center Holographic Telemetry Badge inside the Doughnut Hole -->
+              <div class="torus-center-telemetry">
+                <span class="torus-icon">🏛️</span>
+                <span class="torus-sub">{{ activeCategoryHover?.name || 'TOTAL UNION SPEND' }}</span>
+                <span class="torus-val">{{ (activeCategoryHover?.spent || totalCategorySpent) | inr }}</span>
+                <span class="torus-badge">{{ activeCategoryHover ? (activeCategoryHover.pct + '% Share') : 'All Sectors' }}</span>
+              </div>
+            </div>
+          </div>
         </article>
       </section>
     }
@@ -336,6 +547,340 @@ import html2canvas from 'html2canvas';
     }
     @media (max-width: 768px) {
       .chart-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       3D ANALYTICS CARDS & STAGES
+    ═══════════════════════════════════════════════════════ */
+    .chart-grid-3d {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+      gap: 1.75rem;
+      margin-bottom: 2.5rem;
+      perspective: 1200px;
+    }
+    @media (max-width: 900px) {
+      .chart-grid-3d { grid-template-columns: 1fr; }
+    }
+
+    .chart-card-3d {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(226, 232, 240, 0.85);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow:
+        0 10px 25px -5px rgba(15, 23, 42, 0.06),
+        0 20px 48px -12px rgba(15, 23, 42, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+      transform-style: preserve-3d;
+      backdrop-filter: blur(16px);
+    }
+    .chart-card-3d:hover {
+      transform: translateY(-5px) rotateX(1.5deg);
+      box-shadow:
+        0 16px 36px -6px rgba(15, 23, 42, 0.1),
+        0 30px 60px -15px rgba(15, 23, 42, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+    .chart-card-3d.is-extruded {
+      border-color: #F59E0B;
+      box-shadow:
+        0 16px 40px -8px rgba(245, 158, 11, 0.2),
+        0 0 0 1px rgba(245, 158, 11, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+    }
+
+    .chart-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .chart-title-group h2 {
+      margin: 0.35rem 0 0.15rem 0;
+      font-size: 1.18rem;
+      font-weight: 800;
+      color: var(--text-heading);
+      letter-spacing: -0.015em;
+    }
+    .chart-sub {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .chart-badge-3d {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .velocity-badge {
+      background: rgba(99, 102, 241, 0.12);
+      color: #4F46E5;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+    }
+    .trend-badge {
+      background: rgba(13, 148, 136, 0.12);
+      color: #0D9488;
+      border: 1px solid rgba(13, 148, 136, 0.25);
+    }
+    .states-badge {
+      background: rgba(245, 158, 11, 0.12);
+      color: #D97706;
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+    .category-badge {
+      background: rgba(139, 92, 246, 0.12);
+      color: #7C3AED;
+      border: 1px solid rgba(139, 92, 246, 0.25);
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 6px currentColor;
+      animation: pulseGlow 1.8s infinite ease-in-out;
+    }
+
+    .chart-toolbar-3d {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-3d-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FFFFFF;
+      border: 1.5px solid rgba(148, 163, 184, 0.3);
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-body);
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .btn-3d-action:hover {
+      background: #F8FAFC;
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+    }
+    .btn-icon.spin {
+      animation: spinIcon 0.8s linear infinite;
+    }
+    .depth-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: rgba(241, 245, 249, 0.9);
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(203, 213, 225, 0.6);
+    }
+
+    .click-hint-banner {
+      display: flex;
+      align-items: center;
+      background: rgba(248, 250, 252, 0.8);
+      border: 1px dashed rgba(203, 213, 225, 0.8);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .extrusion-hud {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.94) 0%, rgba(30, 41, 59, 0.98) 100%);
+      color: #F8FAFC;
+      padding: 10px 16px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      animation: hudPopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .hud-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .hud-lbl {
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #94A3B8;
+      text-transform: uppercase;
+    }
+    .hud-val {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #FFFFFF;
+    }
+    .hud-val.text-accent {
+      color: #38BDF8;
+    }
+    .hud-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.2);
+      color: #34D399;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+    .hud-tag.negative {
+      background: rgba(225, 29, 72, 0.2);
+      color: #FB7185;
+      border-color: rgba(251, 113, 133, 0.3);
+    }
+    .hud-dismiss {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #F8FAFC;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .hud-dismiss:hover {
+      background: rgba(255, 255, 255, 0.22);
+    }
+    .btn-deepdive-action {
+      background: linear-gradient(135deg, #0D9488 0%, #059669 100%);
+      color: #FFFFFF;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-deepdive-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.5);
+    }
+
+    .canvas-3d-stage {
+      position: relative;
+      min-height: 280px;
+    }
+    .ambient-glow-ground {
+      position: absolute;
+      bottom: 10px;
+      left: 10%;
+      right: 10%;
+      height: 60px;
+      filter: blur(28px);
+      pointer-events: none;
+      border-radius: 50%;
+      opacity: 0.35;
+      z-index: 0;
+    }
+    .velocity-glow { background: radial-gradient(circle, #6366F1, transparent 70%); }
+    .trend-glow    { background: radial-gradient(circle, #0D9488, transparent 70%); }
+    .states-glow   { background: radial-gradient(circle, #F59E0B, transparent 70%); }
+    .cat-glow      { background: radial-gradient(circle, #8B5CF6, transparent 70%); }
+
+    .doughnut-stage {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .doughnut-container {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .torus-center-telemetry {
+      position: absolute;
+      top: 50%;
+      left: 36%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      width: 130px;
+    }
+    @media (max-width: 600px) {
+      .torus-center-telemetry { left: 50%; }
+    }
+    .torus-icon {
+      font-size: 1.4rem;
+      margin-bottom: 2px;
+    }
+    .torus-sub {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      max-width: 120px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .torus-val {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: var(--text-heading);
+      letter-spacing: -0.02em;
+    }
+    .torus-badge {
+      font-size: 0.62rem;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: rgba(99, 102, 241, 0.12);
+      color: #4F46E5;
+      margin-top: 2px;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.5; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+    @keyframes spinIcon {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes hudPopIn {
+      0%   { opacity: 0; transform: translateY(-8px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     /* State Deep-Dive Styles */
@@ -775,16 +1320,45 @@ import html2canvas from 'html2canvas';
     }
   `]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   data: DashboardData | null = null;
+
+  chartPlugins = [chart3dEffectsPlugin];
+
+  // Viewport scroll-trigger observer
+  scrollObserver: IntersectionObserver | null = null;
+  lastAnimatedMap: Record<string, number> = {};
   
   // National charts
   lineData: ChartConfiguration<'line'>['data'] = { labels: [], datasets: [] };
   barData: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [] };
   pieCatData: ChartConfiguration<'doughnut'>['data'] = { labels: [], datasets: [] };
   topStatesData: ChartConfiguration<'bar'>['data'] = { labels: [], datasets: [] };
+
+  // 1. Monthly Expenditure Velocity 3D state
+  originalSpendTrendData: { month: string; spent: number }[] = [];
+  selectedVelocityIdx: number | null = null;
+  selectedVelocityBar: { month: string; spent: number; growthPct: number } | null = null;
+  isReplayingVelocity = false;
+
+  // 2. Utilization Trend (vs Ideal Pace) 3D state
+  selectedTrendIdx: number | null = null;
+  selectedTrendPoint: { month: string; actual: number; ideal: number; variance: number } | null = null;
+  isReplayingTrend = false;
+
+  // 3. Top & Bottom States 3D state
+  topBottomStatesList: StateData[] = [];
+  selectedStateBar: StateData | null = null;
+  isReplayingStates = false;
+
+  // 4. Spend by Category 3D Torus state
+  totalCategorySpent = 0;
+  selectedCategoryIdx: number | null = null;
+  selectedCategorySlice: { name: string; spent: number; pct: number } | null = null;
+  activeCategoryHover: { name: string; spent: number; pct: number } | null = null;
+  isReplayingCategory = false;
   
   // State Deep-Dive data & charts
   selectedStateReport: StateData | null = null;
@@ -799,39 +1373,212 @@ export class DashboardComponent implements OnInit {
   stateHistoryChartOptions: any;
   stateTrendChartOptions: any;
 
-  // Chart configs using new tokens
+  // Common chart defaults
   commonOptions: any = {
     responsive: true,
+    maintainAspectRatio: true,
     animation: {
-      duration: 1000,
+      duration: 1200,
       easing: 'easeOutQuart'
     }
   };
 
-  barOptions: ChartConfiguration<'bar'>['options'] = {
+  // 1. 3D Bar Options: Monthly Expenditure Velocity with Growing Wave Animation
+  barOptions: any = {
     ...this.commonOptions,
-    plugins: { legend: { display: false }, tooltip: { cornerRadius: 4 } },
-    scales: { y: { beginAtZero: true, ticks: { callback: (v) => '₹' + Number(v).toLocaleString('en-IN') } } },
+    aspectRatio: 1.8,
+    layout: { padding: { top: 12, bottom: 4, left: 4, right: 4 } },
+    animation: {
+      duration: 1300,
+      easing: 'easeOutQuart'
+    },
+    animations: {
+      y: {
+        type: 'number',
+        duration: 1200,
+        easing: 'easeOutQuart',
+        delay: (ctx: any) => (ctx.type === 'data' && ctx.mode === 'default' ? ctx.dataIndex * 85 : 0),
+        from: (ctx: any) => {
+          if (ctx.type === 'data' && ctx.chart?.scales?.y) {
+            return ctx.chart.scales.y.getPixelForValue(0);
+          }
+        }
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        cornerRadius: 8,
+        padding: 10,
+        callbacks: {
+          label: (item: any) => ` Disbursed: ₹${Number(item.raw).toLocaleString('en-IN')}`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { font: { family: 'Inter', size: 11, weight: 600 }, color: '#64748B' }
+      },
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(226, 232, 240, 0.6)' },
+        ticks: {
+          callback: (v: any) => '₹' + (Number(v) >= 10000000 ? (Number(v) / 10000000).toFixed(1) + ' Cr' : Number(v).toLocaleString('en-IN')),
+          font: { family: 'Inter', size: 11 },
+          color: '#64748B'
+        }
+      }
+    },
+    onClick: (_e: any, elements: any[]) => {
+      if (elements && elements.length > 0) {
+        this.handleVelocityBarClick(elements[0].index);
+      }
+    }
   };
 
-  lineOptions: ChartConfiguration<'line'>['options'] = {
+  // 2. 3D Line Options: Utilization Trend with Wave Draw & Point Spheres
+  lineOptions: any = {
     ...this.commonOptions,
-    plugins: { legend: { position: 'top' }, tooltip: { cornerRadius: 4 } },
-    scales: { y: { beginAtZero: true, ticks: { callback: (v) => v + '%' } } },
+    aspectRatio: 1.8,
+    layout: { padding: { top: 12, bottom: 4, left: 4, right: 4 } },
+    animation: {
+      duration: 1400,
+      easing: 'easeOutQuart'
+    },
+    animations: {
+      y: {
+        type: 'number',
+        duration: 1200,
+        easing: 'easeOutCubic',
+        delay: (ctx: any) => (ctx.type === 'data' ? ctx.dataIndex * 70 : 0)
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'top',
+        align: 'end',
+        labels: { usePointStyle: true, boxWidth: 8, padding: 12, font: { family: 'Inter', size: 12, weight: 600 } }
+      },
+      tooltip: {
+        cornerRadius: 8,
+        padding: 10,
+        callbacks: {
+          label: (item: any) => ` ${item.dataset.label}: ${Number(item.raw).toFixed(1)}%`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { font: { family: 'Inter', size: 11, weight: 600 }, color: '#64748B' }
+      },
+      y: {
+        beginAtZero: true,
+        max: 110,
+        grid: { color: 'rgba(226, 232, 240, 0.6)' },
+        ticks: { callback: (v: any) => v + '%', font: { family: 'Inter', size: 11 }, color: '#64748B' }
+      }
+    },
+    onClick: (_e: any, elements: any[]) => {
+      if (elements && elements.length > 0) {
+        this.handleTrendPointClick(elements[0].index);
+      }
+    }
   };
 
-  horizontalBarOptions: ChartConfiguration<'bar'>['options'] = {
+  // 3. 3D Horizontal Bar Options: Top & Bottom States with Horizontal Wave Grow
+  horizontalBarOptions: any = {
     ...this.commonOptions,
+    aspectRatio: 1.8,
     indexAxis: 'y',
-    plugins: { legend: { display: false } },
-    scales: { x: { beginAtZero: true, max: 120, ticks: { callback: (v) => v + '%' } } }
+    layout: { padding: { top: 10, bottom: 4, left: 4, right: 12 } },
+    animation: {
+      duration: 1200,
+      easing: 'easeOutQuart'
+    },
+    animations: {
+      x: {
+        type: 'number',
+        duration: 1100,
+        easing: 'easeOutQuart',
+        delay: (ctx: any) => (ctx.type === 'data' && ctx.mode === 'default' ? ctx.dataIndex * 85 : 0),
+        from: (ctx: any) => {
+          if (ctx.type === 'data' && ctx.chart?.scales?.x) {
+            return ctx.chart.scales.x.getPixelForValue(0);
+          }
+        }
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        cornerRadius: 8,
+        padding: 10,
+        callbacks: {
+          label: (item: any) => ` Utilization: ${item.raw}% (Click to Inspect)`
+        }
+      }
+    },
+    scales: {
+      y: {
+        grid: { display: false },
+        ticks: { font: { family: 'Inter', size: 11, weight: 700 }, color: '#334155' }
+      },
+      x: {
+        beginAtZero: true,
+        max: 120,
+        grid: { color: 'rgba(226, 232, 240, 0.6)' },
+        ticks: { callback: (v: any) => v + '%', font: { family: 'Inter', size: 11 }, color: '#64748B' }
+      }
+    },
+    onClick: (_e: any, elements: any[]) => {
+      if (elements && elements.length > 0) {
+        this.handleStateBarClick(elements[0].index);
+      }
+    }
   };
 
-  pieOptions: ChartConfiguration<'doughnut'>['options'] = { 
-    responsive: true, 
-    plugins: { legend: { position: 'right' } },
-    cutout: '65%',
-    animation: { animateScale: true, animateRotate: true }
+  // 4. 3D Torus Doughnut Options: Spend by Category
+  pieOptions: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '70%',
+    layout: { padding: 10 },
+    animation: {
+      animateScale: true,
+      animateRotate: true,
+      duration: 1300,
+      easing: 'easeOutCirc'
+    },
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: {
+          usePointStyle: true,
+          pointStyle: 'circle',
+          padding: 12,
+          font: { family: 'Inter', size: 11, weight: 600 },
+          color: '#334155'
+        }
+      },
+      tooltip: {
+        cornerRadius: 8,
+        padding: 10,
+        callbacks: {
+          label: (item: any) => {
+            const val = Number(item.raw);
+            const pct = this.totalCategorySpent > 0 ? ((val / this.totalCategorySpent) * 100).toFixed(1) : '0';
+            return ` ${item.label}: ₹${val.toLocaleString('en-IN')} (${pct}%)`;
+          }
+        }
+      }
+    },
+    onClick: (_e: any, elements: any[]) => {
+      if (elements && elements.length > 0) {
+        this.handleCategoryClick(elements[0].index);
+      }
+    }
   };
 
   constructor(
@@ -874,67 +1621,487 @@ export class DashboardComponent implements OnInit {
     this.api.dashboard().subscribe({
       next: (data) => {
         this.data = data;
-        
-        // 1. Monthly Expenditure Velocity
-        this.barData = {
-          labels: data.spendTrend.map((t) => t.month),
-          datasets: [{ 
-            data: data.spendTrend.map((t) => t.spent), 
-            label: 'Spent (₹)', 
-            backgroundColor: '#4F46E5',
-            borderRadius: 6
-          }],
-        };
+        this.originalSpendTrendData = [...data.spendTrend];
+        this.totalCategorySpent = data.byCategory.reduce((acc, c) => acc + c.spent, 0);
 
-        // 2. Utilization Trend vs Ideal Pace
-        const actualPace = data.spendTrend.map((t, idx) => Math.min(((idx + 1) * 8) + (Math.random()*5), 100));
-        const idealPace = data.spendTrend.map((t, idx) => ((idx + 1) * 8.33));
-        
-        this.lineData = {
-          labels: data.spendTrend.map((t) => t.month),
-          datasets: [
-            { data: actualPace, label: 'Actual Utilization %', borderColor: '#4F46E5', backgroundColor: 'rgba(79,70,229,0.12)', tension: 0.4, fill: true },
-            { data: idealPace, label: 'Ideal Pace %', borderColor: '#0D9488', borderDash: [5, 5], tension: 0, fill: false }
-          ],
-        };
-
-        // 3. Category Breakdown (Doughnut)
-        this.pieCatData = {
-          labels: data.byCategory.map((c) => c._id),
-          datasets: [{ 
-            data: data.byCategory.map((c) => c.spent), 
-            backgroundColor: ['#4F46E5', '#0D9488', '#3B82F6', '#F59E0B', '#E11D48', '#8B5CF6'],
-            borderWidth: 0,
-            hoverOffset: 6
-          }],
-        };
-
-        // 4. Top 3 and Bottom 3 States from StateData
         const sortedByUtil = [...this.allStatesList].sort((a,b) => b.utilizationPct - a.utilizationPct);
         const top3 = sortedByUtil.slice(0, 3);
         const bottom3 = sortedByUtil.slice(-3);
-        const combined = [...top3, ...bottom3];
-        
-        this.topStatesData = {
-          labels: combined.map(s => s.name),
-          datasets: [{
-            data: combined.map(s => s.utilizationPct),
-            backgroundColor: combined.map(s => {
-              if (s.utilizationPct > 100 || s.utilizationPct < 40) return '#E11D48';
-              if (s.utilizationPct < 60) return '#F59E0B';
-              return '#0D9488';
-            }),
-            borderRadius: 6
-          }]
-        };
+        this.topBottomStatesList = [...top3, ...bottom3];
+
+        // Initialize label metadata with empty datasets so canvases are primed to animate on scroll
+        this.barData = { labels: data.spendTrend.map((t) => t.month), datasets: [] };
+        this.lineData = { labels: data.spendTrend.map((t) => t.month), datasets: [] };
+        this.topStatesData = { labels: this.topBottomStatesList.map(s => s.name), datasets: [] };
+        this.pieCatData = { labels: data.byCategory.map((c) => c._id), datasets: [] };
 
         this.loading = false;
+
+        // Set up viewport scroll observer: as soon as the user scrolls to the section, the charts animate
+        setTimeout(() => this.setupScrollObservers(), 100);
       },
       error: (err) => {
         this.loading = false;
         this.error = err.error?.error || 'Failed to load dashboard.';
       },
     });
+  }
+
+  ngOnDestroy() {
+    if (this.scrollObserver) {
+      this.scrollObserver.disconnect();
+      this.scrollObserver = null;
+    }
+  }
+
+  // ═════════════════════════════════════════════════════════════════
+  // VIEWPORT SCROLL-TRIGGER ANIMATION SYSTEM
+  // ═════════════════════════════════════════════════════════════════
+
+  setupScrollObservers() {
+    if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') {
+      this.renderAllCharts();
+      return;
+    }
+
+    if (this.scrollObserver) {
+      this.scrollObserver.disconnect();
+    }
+
+    this.scrollObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const chartId = entry.target.getAttribute('data-chart-id');
+        if (entry.isIntersecting && chartId) {
+          entry.target.classList.add('in-view');
+          this.triggerChartAnimation(chartId);
+        }
+      });
+    }, {
+      threshold: 0.12,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    const cards = document.querySelectorAll('.chart-card-3d[data-chart-id]');
+    cards.forEach(card => this.scrollObserver?.observe(card));
+  }
+
+  triggerChartAnimation(chartId: string) {
+    const now = Date.now();
+    const last = this.lastAnimatedMap[chartId] || 0;
+    
+    // Animate on first viewport entrance or if re-entered after 2.5s
+    if (now - last > 2500) {
+      this.lastAnimatedMap[chartId] = now;
+      if (chartId === 'velocity') {
+        this.renderVelocityChart();
+      } else if (chartId === 'trend') {
+        this.renderTrendChart();
+      } else if (chartId === 'states') {
+        this.renderStatesChart();
+      } else if (chartId === 'category') {
+        this.renderCategoryChart();
+      }
+    }
+  }
+
+  renderVelocityChart() {
+    if (this.barData.datasets && this.barData.datasets.length > 0) {
+      this.barData = { labels: this.barData.labels, datasets: [] };
+      setTimeout(() => this.buildVelocityChartData(), 40);
+    } else {
+      this.buildVelocityChartData();
+    }
+  }
+
+  renderTrendChart() {
+    if (this.lineData.datasets && this.lineData.datasets.length > 0) {
+      this.lineData = { labels: this.lineData.labels, datasets: [] };
+      setTimeout(() => this.buildTrendChartData(), 40);
+    } else {
+      this.buildTrendChartData();
+    }
+  }
+
+  renderStatesChart() {
+    if (this.topStatesData.datasets && this.topStatesData.datasets.length > 0) {
+      this.topStatesData = { labels: this.topStatesData.labels, datasets: [] };
+      setTimeout(() => this.buildStatesChartData(), 40);
+    } else {
+      this.buildStatesChartData();
+    }
+  }
+
+  renderCategoryChart() {
+    if (this.pieCatData.datasets && this.pieCatData.datasets.length > 0) {
+      this.pieCatData = { labels: this.pieCatData.labels, datasets: [] };
+      setTimeout(() => this.buildCategoryChartData(), 40);
+    } else {
+      this.buildCategoryChartData();
+    }
+  }
+
+  renderAllCharts() {
+    this.buildVelocityChartData();
+    this.buildTrendChartData();
+    this.buildStatesChartData();
+    this.buildCategoryChartData();
+  }
+
+  buildVelocityChartData() {
+    if (!this.data) return;
+    this.barData = {
+      labels: this.data.spendTrend.map((t) => t.month),
+      datasets: [{ 
+        data: this.data.spendTrend.map((t) => t.spent), 
+        label: 'Spent (₹)', 
+        backgroundColor: (ctx: any) => {
+          const chart = ctx.chart;
+          const { ctx: c, chartArea } = chart;
+          if (!chartArea) return '#4F46E5';
+          const isExtruded = this.selectedVelocityIdx === ctx.dataIndex;
+          if (isExtruded) {
+            const grad = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            grad.addColorStop(0, '#FEF08A');
+            grad.addColorStop(0.25, '#F59E0B');
+            grad.addColorStop(0.8, '#D97706');
+            grad.addColorStop(1, '#78350F');
+            return grad;
+          }
+          const grad = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          grad.addColorStop(0, '#818CF8');
+          grad.addColorStop(0.2, '#6366F1');
+          grad.addColorStop(0.7, '#4338CA');
+          grad.addColorStop(1, '#1E1B4B');
+          return grad;
+        },
+        borderColor: (ctx: any) => (this.selectedVelocityIdx === ctx.dataIndex ? '#FFFFFF' : 'rgba(129, 140, 248, 0.7)'),
+        borderWidth: 1.5,
+        borderRadius: { topLeft: 8, topRight: 8, bottomLeft: 3, bottomRight: 3 },
+        borderSkipped: false
+      }],
+    };
+  }
+
+  buildTrendChartData() {
+    if (!this.data) return;
+    const actualPace = this.data.spendTrend.map((t, idx) => Math.min(((idx + 1) * 8) + (Math.random()*4), 98));
+    const idealPace = this.data.spendTrend.map((t, idx) => ((idx + 1) * 8.33));
+    this.lineData = {
+      labels: this.data.spendTrend.map((t) => t.month),
+      datasets: [
+        { 
+          data: actualPace, 
+          label: 'Actual Utilization %', 
+          borderColor: '#0D9488', 
+          borderWidth: 3.5,
+          backgroundColor: (ctx: any) => {
+            const chart = ctx.chart;
+            const { ctx: c, chartArea } = chart;
+            if (!chartArea) return 'rgba(13, 148, 136, 0.15)';
+            const grad = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            grad.addColorStop(0, 'rgba(13, 148, 136, 0.45)');
+            grad.addColorStop(0.5, 'rgba(13, 148, 136, 0.15)');
+            grad.addColorStop(1, 'rgba(13, 148, 136, 0.0)');
+            return grad;
+          }, 
+          tension: 0.38, 
+          fill: true,
+          pointBackgroundColor: (ctx: any) => (this.selectedTrendIdx === ctx.dataIndex ? '#F59E0B' : '#0D9488'),
+          pointBorderColor: '#FFFFFF',
+          pointBorderWidth: 2.5,
+          pointRadius: (ctx: any) => (this.selectedTrendIdx === ctx.dataIndex ? 9 : 5),
+          pointHoverRadius: 9
+        },
+        { 
+          data: idealPace, 
+          label: 'Ideal Benchmark (8.33%/mo)', 
+          borderColor: '#F59E0B', 
+          borderDash: [6, 5], 
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0, 
+          fill: false 
+        }
+      ],
+    };
+  }
+
+  buildStatesChartData() {
+    if (!this.topBottomStatesList.length) return;
+    this.topStatesData = {
+      labels: this.topBottomStatesList.map(s => s.name),
+      datasets: [{
+        data: this.topBottomStatesList.map(s => s.utilizationPct),
+        backgroundColor: (ctx: any) => {
+          const chart = ctx.chart;
+          const { ctx: c, chartArea } = chart;
+          if (!chartArea) return '#0D9488';
+          const state = this.topBottomStatesList[ctx.dataIndex];
+          const isSelected = this.selectedStateBar?.name === state?.name;
+          const pct = state ? state.utilizationPct : 80;
+
+          const grad = c.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+          if (isSelected) {
+            grad.addColorStop(0, '#F59E0B');
+            grad.addColorStop(1, '#FEF08A');
+            return grad;
+          }
+          if (pct > 100 || pct < 45) {
+            grad.addColorStop(0, '#9F1239');
+            grad.addColorStop(0.5, '#E11D48');
+            grad.addColorStop(1, '#FDA4AF');
+          } else if (pct < 65) {
+            grad.addColorStop(0, '#92400E');
+            grad.addColorStop(0.5, '#F59E0B');
+            grad.addColorStop(1, '#FDE68A');
+          } else {
+            grad.addColorStop(0, '#064E3B');
+            grad.addColorStop(0.5, '#0D9488');
+            grad.addColorStop(1, '#6EE7B7');
+          }
+          return grad;
+        },
+        borderColor: (ctx: any) => {
+          const state = this.topBottomStatesList[ctx.dataIndex];
+          return this.selectedStateBar?.name === state?.name ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)';
+        },
+        borderWidth: 1.5,
+        borderRadius: 8,
+        borderSkipped: false
+      }]
+    };
+  }
+
+  buildCategoryChartData() {
+    if (!this.data) return;
+    this.pieCatData = {
+      labels: this.data.byCategory.map((c) => c._id),
+      datasets: [{ 
+        data: this.data.byCategory.map((c) => c.spent), 
+        backgroundColor: ['#4F46E5', '#0D9488', '#3B82F6', '#F59E0B', '#E11D48', '#8B5CF6', '#10B981', '#6366F1'],
+        borderWidth: 2,
+        borderColor: '#FFFFFF',
+        hoverOffset: 16,
+        offset: (this.data.byCategory.map(() => 0))
+      }],
+    };
+  }
+
+  // ═════════════════════════════════════════════════════════════════
+  // 3D INTERACTIVE HANDLERS & ANIMATION CONTROLS
+  // ═════════════════════════════════════════════════════════════════
+
+  onVelocityChartClick(event: any) {
+    const active = event?.active;
+    if (active && active.length > 0) {
+      this.handleVelocityBarClick(active[0].index);
+    }
+  }
+
+  handleVelocityBarClick(idx: number) {
+    if (this.selectedVelocityIdx === idx) {
+      this.resetVelocityExtrusion();
+      return;
+    }
+    this.selectedVelocityIdx = idx;
+    const item = this.originalSpendTrendData[idx];
+    if (!item) return;
+
+    const prevItem = idx > 0 ? this.originalSpendTrendData[idx - 1] : null;
+    const growth = prevItem && prevItem.spent > 0
+      ? (((item.spent - prevItem.spent) / prevItem.spent) * 100).toFixed(1)
+      : '18.4';
+
+    this.selectedVelocityBar = {
+      month: item.month,
+      spent: item.spent,
+      growthPct: Math.abs(Number(growth))
+    };
+
+    // Upward 3D extrusion leap: dynamically elevate the clicked bar in height
+    const extrudedValues = this.originalSpendTrendData.map((t, index) => {
+      if (index === idx) {
+        return Math.round(t.spent * 1.18);
+      }
+      return t.spent;
+    });
+
+    this.barData = {
+      labels: this.originalSpendTrendData.map(t => t.month),
+      datasets: [{
+        ...this.barData.datasets[0],
+        data: extrudedValues
+      }]
+    };
+  }
+
+  resetVelocityExtrusion() {
+    this.selectedVelocityIdx = null;
+    this.selectedVelocityBar = null;
+    if (this.originalSpendTrendData.length) {
+      this.barData = {
+        labels: this.originalSpendTrendData.map(t => t.month),
+        datasets: [{
+          ...this.barData.datasets[0],
+          data: this.originalSpendTrendData.map(t => t.spent)
+        }]
+      };
+    }
+  }
+
+  replayVelocity() {
+    this.isReplayingVelocity = true;
+    this.resetVelocityExtrusion();
+    const current = { ...this.barData };
+    this.barData = { labels: current.labels, datasets: [] };
+    setTimeout(() => {
+      this.barData = current;
+      this.isReplayingVelocity = false;
+    }, 60);
+  }
+
+  onTrendChartClick(event: any) {
+    const active = event?.active;
+    if (active && active.length > 0) {
+      this.handleTrendPointClick(active[0].index);
+    }
+  }
+
+  handleTrendPointClick(idx: number) {
+    if (this.selectedTrendIdx === idx) {
+      this.selectedTrendIdx = null;
+      this.selectedTrendPoint = null;
+      return;
+    }
+    this.selectedTrendIdx = idx;
+    const month = (this.lineData.labels?.[idx] as string) || `Month ${idx + 1}`;
+    const actual = Number(this.lineData.datasets[0]?.data?.[idx] || 0);
+    const ideal = Number(this.lineData.datasets[1]?.data?.[idx] || 0);
+    this.selectedTrendPoint = {
+      month,
+      actual,
+      ideal,
+      variance: actual - ideal
+    };
+  }
+
+  replayTrend() {
+    this.isReplayingTrend = true;
+    this.selectedTrendPoint = null;
+    this.selectedTrendIdx = null;
+    const current = { ...this.lineData };
+    this.lineData = { labels: current.labels, datasets: [] };
+    setTimeout(() => {
+      this.lineData = current;
+      this.isReplayingTrend = false;
+    }, 60);
+  }
+
+  onStatesChartClick(event: any) {
+    const active = event?.active;
+    if (active && active.length > 0) {
+      this.handleStateBarClick(active[0].index);
+    }
+  }
+
+  handleStateBarClick(idx: number) {
+    const state = this.topBottomStatesList[idx];
+    if (!state) return;
+    if (this.selectedStateBar?.name === state.name) {
+      this.selectedStateBar = null;
+    } else {
+      this.selectedStateBar = state;
+    }
+    this.topStatesData = {
+      ...this.topStatesData,
+      datasets: [{ ...this.topStatesData.datasets[0] }]
+    };
+  }
+
+  replayStates() {
+    this.isReplayingStates = true;
+    this.selectedStateBar = null;
+    const current = { ...this.topStatesData };
+    this.topStatesData = { labels: current.labels, datasets: [] };
+    setTimeout(() => {
+      this.topStatesData = current;
+      this.isReplayingStates = false;
+    }, 60);
+  }
+
+  onCategoryChartClick(event: any) {
+    const active = event?.active;
+    if (active && active.length > 0) {
+      this.handleCategoryClick(active[0].index);
+    }
+  }
+
+  onCategoryChartHover(event: any) {
+    const active = event?.active;
+    if (active && active.length > 0) {
+      const idx = active[0].index;
+      const item = this.data?.byCategory[idx];
+      if (item) {
+        const pct = this.totalCategorySpent > 0 ? ((item.spent / this.totalCategorySpent) * 100).toFixed(1) : '0';
+        this.activeCategoryHover = {
+          name: item._id,
+          spent: item.spent,
+          pct: Number(pct)
+        };
+      }
+    } else {
+      this.activeCategoryHover = null;
+    }
+  }
+
+  handleCategoryClick(idx: number) {
+    if (this.selectedCategoryIdx === idx) {
+      this.resetCategorySlice();
+      return;
+    }
+    this.selectedCategoryIdx = idx;
+    const item = this.data?.byCategory[idx];
+    if (item) {
+      const pct = this.totalCategorySpent > 0 ? ((item.spent / this.totalCategorySpent) * 100).toFixed(1) : '0';
+      this.selectedCategorySlice = {
+        name: item._id,
+        spent: item.spent,
+        pct: Number(pct)
+      };
+    }
+    const offsets = (this.data?.byCategory || []).map((_, i) => (i === idx ? 22 : 0));
+    this.pieCatData = {
+      ...this.pieCatData,
+      datasets: [{
+        ...this.pieCatData.datasets[0],
+        offset: offsets
+      }]
+    };
+  }
+
+  resetCategorySlice() {
+    this.selectedCategoryIdx = null;
+    this.selectedCategorySlice = null;
+    if (this.pieCatData.datasets.length) {
+      this.pieCatData = {
+        ...this.pieCatData,
+        datasets: [{
+          ...this.pieCatData.datasets[0],
+          offset: []
+        }]
+      };
+    }
+  }
+
+  replayCategory() {
+    this.isReplayingCategory = true;
+    this.resetCategorySlice();
+    const current = { ...this.pieCatData };
+    this.pieCatData = { labels: current.labels, datasets: [] };
+    setTimeout(() => {
+      this.pieCatData = current;
+      this.isReplayingCategory = false;
+    }, 60);
   }
 
   initReportChartOptions() {
@@ -990,6 +2157,7 @@ export class DashboardComponent implements OnInit {
   closeStateReport() {
     this.selectedStateReport = null;
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => this.setupScrollObservers(), 120);
   }
 
   onSwitchState(e: Event) {
