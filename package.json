@@ -4,8 +4,8 @@
   "private": true,
   "description": "AI-Based Budget Utilization Monitoring System for Public Finance Oversight in India",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build",
-    "vercel-build": "cd frontend && npm install && npm run build",
+    "build": "cd frontend && npm install --include=dev && (./node_modules/.bin/ng build || npx @angular/cli build)",
+    "vercel-build": "cd frontend && npm install --include=dev && (./node_modules/.bin/ng build || npx @angular/cli build)",
     "start": "node backend/server.js",
     "seed": "cd backend && npm run seed"
   },
