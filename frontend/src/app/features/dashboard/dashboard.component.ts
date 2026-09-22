@@ -30,58 +30,6 @@ const chart3dEffectsPlugin = {
   }
 };
 
-// Mathematically center the telemetry badge inside the doughnut hole across all viewports
-const torusCenterPlugin = {
-  id: 'torusCenterPositioner',
-  afterLayout(chart: any) {
-    if (chart.config?.type !== 'doughnut') return;
-    const canvas = chart.canvas;
-    const container = canvas?.parentElement;
-    if (!container) return;
-    const badge = container.querySelector('.torus-center-telemetry') as HTMLElement;
-    if (!badge) return;
-
-    let cx: number | null = null;
-    let cy: number | null = null;
-
-    const meta = chart.getDatasetMeta(0);
-    if (meta && meta.data && meta.data.length > 0 && meta.data[0]) {
-      cx = meta.data[0].x;
-      cy = meta.data[0].y;
-    } else if (chart.chartArea) {
-      cx = (chart.chartArea.left + chart.chartArea.right) / 2;
-      cy = (chart.chartArea.top + chart.chartArea.bottom) / 2;
-    }
-
-    if (cx !== null && cy !== null && !isNaN(cx) && !isNaN(cy) && cx > 0 && cy > 0) {
-      const offsetX = canvas.offsetLeft || 0;
-      const offsetY = canvas.offsetTop || 0;
-      badge.style.left = `${Math.round(offsetX + cx)}px`;
-      badge.style.top = `${Math.round(offsetY + cy)}px`;
-    }
-  },
-  afterRender(chart: any) {
-    if (chart.config?.type !== 'doughnut') return;
-    const canvas = chart.canvas;
-    const container = canvas?.parentElement;
-    if (!container) return;
-    const badge = container.querySelector('.torus-center-telemetry') as HTMLElement;
-    if (!badge) return;
-
-    const meta = chart.getDatasetMeta(0);
-    if (meta && meta.data && meta.data.length > 0 && meta.data[0]) {
-      const cx = meta.data[0].x;
-      const cy = meta.data[0].y;
-      if (cx > 0 && cy > 0) {
-        const offsetX = canvas.offsetLeft || 0;
-        const offsetY = canvas.offsetTop || 0;
-        badge.style.left = `${Math.round(offsetX + cx)}px`;
-        badge.style.top = `${Math.round(offsetY + cy)}px`;
-      }
-    }
-  }
-};
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -334,16 +282,46 @@ const torusCenterPlugin = {
 
           <div class="canvas-3d-stage doughnut-stage">
             <div class="ambient-glow-ground cat-glow"></div>
-            <div class="doughnut-container">
-              <canvas baseChart [type]="'doughnut'" [data]="pieCatData" [options]="pieOptions" [plugins]="chartPlugins" (chartClick)="onCategoryChartClick($event)" (chartHover)="onCategoryChartHover($event)"></canvas>
-              
-              <!-- Center Holographic Telemetry Badge inside the Doughnut Hole -->
-              <div class="torus-center-telemetry">
-                <span class="torus-icon">🏛️</span>
-                <span class="torus-sub">{{ activeCategoryHover?.name || 'TOTAL UNION SPEND' }}</span>
-                <span class="torus-val">{{ (activeCategoryHover?.spent || totalCategorySpent) | inr }}</span>
-                <span class="torus-badge">{{ activeCategoryHover ? (activeCategoryHover.pct + '% Share') : 'All Sectors' }}</span>
+            
+            <div class="doughnut-stage-layout">
+              <div class="doughnut-container">
+                <canvas baseChart [type]="'doughnut'" [data]="pieCatData" [options]="pieOptions" [plugins]="chartPlugins" (chartClick)="onCategoryChartClick($event)" (chartHover)="onCategoryChartHover($event)"></canvas>
+                
+                <!-- Center Holographic Telemetry Badge inside the Doughnut Hole -->
+                <div class="torus-center-telemetry">
+                  <span class="torus-icon">🏛️</span>
+                  <span class="torus-sub">{{ activeCategoryHover?.name || 'TOTAL UNION SPEND' }}</span>
+                  <span class="torus-val">{{ (activeCategoryHover?.spent || totalCategorySpent) | inr }}</span>
+                  <span class="torus-badge">{{ activeCategoryHover ? (activeCategoryHover.pct + '% Share') : 'All Sectors' }}</span>
+                </div>
               </div>
+
+              <!-- High-Tech Interactive Category Legend Panel -->
+              @if (data.byCategory && data.byCategory.length > 0) {
+                <div class="doughnut-legend-panel">
+                  <div class="legend-panel-header">
+                    <span class="legend-header-title">SECTOR ALLOCATIONS</span>
+                    <span class="legend-header-count">{{ data!.byCategory.length }} Sectors</span>
+                  </div>
+                  <div class="legend-items-list">
+                    @for (cat of data!.byCategory; track cat._id; let idx = $index) {
+                      <div 
+                        class="legend-item-card" 
+                        [class.active]="selectedCategoryIdx === idx || activeCategoryHover?.name === cat._id"
+                        (mouseenter)="onLegendHover(idx)"
+                        (mouseleave)="onLegendLeave()"
+                        (click)="handleCategoryClick(idx)">
+                        <span class="legend-dot" [style.background]="getCategoryColor(idx)"></span>
+                        <div class="legend-info">
+                          <span class="legend-name" [title]="cat._id">{{ cat._id }}</span>
+                          <span class="legend-val">{{ cat.spent | inr }}</span>
+                        </div>
+                        <span class="legend-share-badge">{{ getCategoryPct(cat.spent) }}%</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
             </div>
           </div>
         </article>
@@ -519,7 +497,7 @@ const torusCenterPlugin = {
               <span class="badge bg-success">Sector Share</span>
             </div>
             <div style="height: 320px; position: relative;">
-              <canvas baseChart [type]="'doughnut'" [data]="stateCategoryChartData" [options]="pieOptions"></canvas>
+              <canvas baseChart [type]="'doughnut'" [data]="stateCategoryChartData" [options]="stateCategoryChartOptions"></canvas>
             </div>
           </article>
         </section>
@@ -865,12 +843,26 @@ const torusCenterPlugin = {
       display: flex;
       align-items: center;
       justify-content: center;
+      width: 100%;
+      position: relative;
+    }
+    .doughnut-stage-layout {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2.2rem;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0.5rem 0;
+      position: relative;
+      z-index: 2;
     }
     .doughnut-container {
       position: relative;
-      width: 100%;
-      max-width: 480px;
-      height: 300px;
+      width: 290px;
+      height: 290px;
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -878,7 +870,7 @@ const torusCenterPlugin = {
     .torus-center-telemetry {
       position: absolute;
       top: 50%;
-      left: 31.25%;
+      left: 50%;
       transform: translate(-50%, -50%);
       pointer-events: none;
       display: flex;
@@ -939,6 +931,111 @@ const torusCenterPlugin = {
       align-items: center;
       justify-content: center;
       line-height: 1.3;
+    }
+
+    .doughnut-legend-panel {
+      flex: 1;
+      min-width: 230px;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .legend-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 0.35rem 0.35rem 0.35rem;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+      margin-bottom: 0.25rem;
+    }
+    .legend-header-title {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+    .legend-header-count {
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #6366F1;
+      background: rgba(99, 102, 241, 0.08);
+      padding: 1px 6px;
+      border-radius: 999px;
+    }
+    .legend-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .legend-item-card {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.45rem 0.65rem;
+      border-radius: 8px;
+      background: rgba(248, 250, 252, 0.85);
+      border: 1px solid rgba(226, 232, 240, 0.85);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .legend-item-card:hover, .legend-item-card.active {
+      background: rgba(255, 255, 255, 0.98);
+      border-color: #8B5CF6;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.12);
+      transform: translateX(4px);
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
+    }
+    .legend-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .legend-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-heading);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .legend-val {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .legend-share-badge {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: #6366F1;
+      background: rgba(99, 102, 241, 0.1);
+      padding: 2px 6px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    @media (max-width: 680px) {
+      .doughnut-stage-layout {
+        flex-direction: column;
+        gap: 1.25rem;
+      }
+      .doughnut-container {
+        width: 260px;
+        height: 260px;
+      }
+      .doughnut-legend-panel {
+        max-width: 100%;
+        width: 100%;
+      }
     }
 
     @keyframes pulseGlow {
@@ -1396,7 +1493,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   error: string | null = null;
   data: DashboardData | null = null;
 
-  chartPlugins = [chart3dEffectsPlugin, torusCenterPlugin];
+  chartPlugins = [chart3dEffectsPlugin];
 
   // Viewport scroll-trigger observer
   scrollObserver: IntersectionObserver | null = null;
@@ -1624,14 +1721,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     },
     plugins: {
       legend: {
-        position: 'right',
-        labels: {
-          usePointStyle: true,
-          pointStyle: 'circle',
-          padding: 12,
-          font: { family: 'Inter', size: 11, weight: 600 },
-          color: '#334155'
-        }
+        display: false
       },
       tooltip: {
         cornerRadius: 8,
@@ -1651,6 +1741,49 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     }
   };
+
+  stateCategoryChartOptions: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '65%',
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: {
+          usePointStyle: true,
+          pointStyle: 'circle',
+          padding: 12,
+          font: { family: 'Inter', size: 11, weight: 600 },
+          color: '#334155'
+        }
+      }
+    }
+  };
+
+  categoryColors = ['#4F46E5', '#0D9488', '#3B82F6', '#F59E0B', '#E11D48', '#8B5CF6', '#10B981', '#6366F1'];
+
+  getCategoryColor(idx: number): string {
+    return this.categoryColors[idx % this.categoryColors.length];
+  }
+
+  getCategoryPct(spent: number): string {
+    return this.totalCategorySpent > 0 ? ((spent / this.totalCategorySpent) * 100).toFixed(1) : '0';
+  }
+
+  onLegendHover(idx: number) {
+    const item = this.data?.byCategory[idx];
+    if (item) {
+      this.activeCategoryHover = {
+        name: item._id,
+        spent: item.spent,
+        pct: Number(this.getCategoryPct(item.spent))
+      };
+    }
+  }
+
+  onLegendLeave() {
+    this.activeCategoryHover = null;
+  }
 
   constructor(
     private api: ApiService, 
@@ -1949,7 +2082,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       labels: this.data.byCategory.map((c) => c._id),
       datasets: [{ 
         data: this.data.byCategory.map((c) => c.spent), 
-        backgroundColor: ['#4F46E5', '#0D9488', '#3B82F6', '#F59E0B', '#E11D48', '#8B5CF6', '#10B981', '#6366F1'],
+        backgroundColor: this.categoryColors,
         borderWidth: 2,
         borderColor: '#FFFFFF',
         hoverOffset: 16,
