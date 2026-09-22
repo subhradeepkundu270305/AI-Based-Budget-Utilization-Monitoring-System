@@ -3148,12 +3148,12 @@ export interface SchemeTelemetry {
     /* ══ SCHEME TELEMETRY MODAL ══ */
     .scheme-modal-backdrop {
       position: fixed;
-      top: 0;
+      top: var(--header-height, 72px);
       left: 0;
       right: 0;
       bottom: 0;
       width: 100vw;
-      height: 100vh;
+      height: calc(100vh - var(--header-height, 72px));
       background: rgba(8, 30, 36, 0.85);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -3161,7 +3161,7 @@ export interface SchemeTelemetry {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 24px 20px;
       overflow-y: auto;
       box-sizing: border-box;
     }
@@ -3172,7 +3172,7 @@ export interface SchemeTelemetry {
       border-radius: 20px;
       max-width: 960px;
       width: 100%;
-      max-height: calc(100vh - 40px);
+      max-height: calc(100vh - var(--header-height, 72px) - 48px);
       display: flex;
       flex-direction: column;
       box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
@@ -3188,7 +3188,7 @@ export interface SchemeTelemetry {
     }
 
     .scheme-modal-header {
-      padding: 18px 24px;
+      padding: 16px 24px;
       background: linear-gradient(135deg, #083E48 0%, #0A4F5C 100%);
       color: #FFFFFF;
       display: flex;
@@ -3210,13 +3210,13 @@ export interface SchemeTelemetry {
       border: 1px solid rgba(45, 212, 191, 0.4);
       padding: 3px 8px;
       border-radius: 6px;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
     .scheme-modal-title {
-      font-size: 1.4rem;
+      font-size: 1.35rem;
       font-weight: 800;
-      margin: 0 0 6px;
+      margin: 0 0 5px;
       line-height: 1.25;
       color: #FFFFFF;
     }
@@ -3265,8 +3265,8 @@ export interface SchemeTelemetry {
     .scheme-kpi-banner {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      padding: 12px 24px;
+      gap: 10px;
+      padding: 10px 24px;
       background: #F8FAFC;
       border-bottom: 1px solid #E2E8F0;
       flex-shrink: 0;
@@ -3274,14 +3274,14 @@ export interface SchemeTelemetry {
 
     .kpi-banner-card {
       background: #FFFFFF;
-      border-radius: 12px;
-      padding: 10px 14px;
+      border-radius: 10px;
+      padding: 8px 12px;
       border: 1px solid rgba(13, 148, 136, 0.15);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
     }
 
     .kpi-banner-label {
-      font-size: 0.64rem;
+      font-size: 0.62rem;
       font-weight: 800;
       color: #64748B;
       letter-spacing: 0.05em;
@@ -3290,7 +3290,7 @@ export interface SchemeTelemetry {
     }
 
     .kpi-banner-value {
-      font-size: 1.22rem;
+      font-size: 1.16rem;
       font-weight: 800;
       color: #0F172A;
       line-height: 1.2;
@@ -3301,9 +3301,9 @@ export interface SchemeTelemetry {
     }
 
     .kpi-banner-sub {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: #64748B;
-      margin-top: 3px;
+      margin-top: 2px;
       display: block;
     }
 
@@ -3318,11 +3318,11 @@ export interface SchemeTelemetry {
     }
 
     .scheme-tab-btn {
-      padding: 11px 16px;
+      padding: 10px 14px;
       background: none;
       border: none;
       border-bottom: 3px solid transparent;
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       font-weight: 700;
       color: #64748B;
       cursor: pointer;
@@ -3344,25 +3344,25 @@ export interface SchemeTelemetry {
     }
 
     .scheme-modal-body {
-      padding: 20px 24px;
+      padding: 16px 24px;
       overflow-y: auto;
       flex: 1 1 auto;
       min-height: 0;
     }
 
     .pane-headline {
-      margin-bottom: 20px;
+      margin-bottom: 14px;
     }
 
     .pane-headline h3 {
-      font-size: 1.12rem;
+      font-size: 1.08rem;
       font-weight: 800;
       color: #083E48;
       margin: 0 0 4px;
     }
 
     .pane-headline p {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: #64748B;
       margin: 0;
     }
@@ -3756,7 +3756,12 @@ export interface SchemeTelemetry {
     /* ══ 6. COMPACT REGISTRATION MODAL (FITS COMFORTABLY WITHOUT SCROLL) ══ */
     .modal-backdrop {
       position: fixed;
-      inset: 0;
+      top: var(--header-height, 72px);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: calc(100vh - var(--header-height, 72px));
       background: rgba(3, 31, 36, 0.75);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
@@ -3764,13 +3769,15 @@ export interface SchemeTelemetry {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 20px;
       overflow-y: auto;
+      box-sizing: border-box;
     }
 
     .modal-dialog-glass {
       width: 100%;
       max-width: 580px;
+      max-height: calc(100vh - var(--header-height, 72px) - 40px);
       background: #FFFFFF;
       color: #0F172A;
       border-radius: 20px;
@@ -3779,6 +3786,7 @@ export interface SchemeTelemetry {
       position: relative;
       animation: modalEntrance 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       margin: auto;
+      overflow-y: auto;
     }
 
     @keyframes modalEntrance {
