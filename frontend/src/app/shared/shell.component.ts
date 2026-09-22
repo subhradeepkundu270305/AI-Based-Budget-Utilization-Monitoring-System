@@ -26,7 +26,7 @@ interface SearchItem {
 
           <!-- Left: Brand Logo & Title -->
           <div class="navbar-left">
-            <a routerLink="/home" class="brand" title="Return to Home Landing Page">
+            <a routerLink="/home" (click)="onNavClick()" class="brand" title="Return to Home Landing Page">
               <img src="/logo.png" alt="Logo" class="brand-logo" />
               <div class="brand-text">
                 <span class="brand-name">Budget Monitor</span>
@@ -38,30 +38,30 @@ interface SearchItem {
           <!-- Center: Horizontal Navigation Items -->
           <div class="navbar-center">
             <nav class="navbar-nav-links">
-              <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="top-nav-item">
+              <a routerLink="/home" (click)="onNavClick()" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="top-nav-item">
                 <span>Home</span>
               </a>
-              <a routerLink="/dashboard" routerLinkActive="active" class="top-nav-item">
+              <a routerLink="/dashboard" (click)="onNavClick()" routerLinkActive="active" class="top-nav-item">
                 <span>Dashboard</span>
               </a>
-              <a routerLink="/budgets" routerLinkActive="active" class="top-nav-item">
+              <a routerLink="/budgets" (click)="onNavClick()" routerLinkActive="active" class="top-nav-item">
                 <span>Budgets</span>
               </a>
-              <a routerLink="/expenditures" routerLinkActive="active" class="top-nav-item">
+              <a routerLink="/expenditures" (click)="onNavClick()" routerLinkActive="active" class="top-nav-item">
                 <span>Expenditures</span>
               </a>
-              <a routerLink="/reports" routerLinkActive="active" class="top-nav-item">
+              <a routerLink="/reports" (click)="onNavClick()" routerLinkActive="active" class="top-nav-item">
                 <span>Departments</span>
               </a>
-              <a routerLink="/alerts" routerLinkActive="active" class="top-nav-item alert-link">
+              <a routerLink="/alerts" (click)="onNavClick()" routerLinkActive="active" class="top-nav-item alert-link">
                 <span>Alerts</span>
                 <span class="nav-alert-chip" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
               </a>
-              <a routerLink="/blog" routerLinkActive="active" class="top-nav-item">
+              <a routerLink="/blog" (click)="onNavClick()" routerLinkActive="active" class="top-nav-item">
                 <span>Insights</span>
               </a>
               @if (auth.hasRole(['Admin'])) {
-                <a routerLink="/admin" routerLinkActive="active" class="top-nav-item admin-link">
+                <a routerLink="/admin" (click)="onNavClick()" routerLinkActive="active" class="top-nav-item admin-link">
                   <span>Admin</span>
                 </a>
               }
@@ -242,37 +242,37 @@ interface SearchItem {
         @if (mobileMenuOpen) {
           <div class="mobile-drawer glass-panel" (click)="$event.stopPropagation()">
             <div class="mobile-nav-links">
-              <a routerLink="/home" (click)="mobileMenuOpen=false" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="mobile-nav-item">
+              <a routerLink="/home" (click)="onNavClick()" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="mobile-nav-item">
                 <span class="m-icon">🏠</span>
                 <span>Home</span>
               </a>
-              <a routerLink="/dashboard" (click)="mobileMenuOpen=false" routerLinkActive="active" class="mobile-nav-item">
+              <a routerLink="/dashboard" (click)="onNavClick()" routerLinkActive="active" class="mobile-nav-item">
                 <span class="m-icon">📊</span>
                 <span>National Dashboard</span>
               </a>
-              <a routerLink="/budgets" (click)="mobileMenuOpen=false" routerLinkActive="active" class="mobile-nav-item">
+              <a routerLink="/budgets" (click)="onNavClick()" routerLinkActive="active" class="mobile-nav-item">
                 <span class="m-icon">💰</span>
                 <span>Budget Allocation</span>
               </a>
-              <a routerLink="/expenditures" (click)="mobileMenuOpen=false" routerLinkActive="active" class="mobile-nav-item">
+              <a routerLink="/expenditures" (click)="onNavClick()" routerLinkActive="active" class="mobile-nav-item">
                 <span class="m-icon">📑</span>
                 <span>Expenditures</span>
               </a>
-              <a routerLink="/reports" (click)="mobileMenuOpen=false" routerLinkActive="active" class="mobile-nav-item">
+              <a routerLink="/reports" (click)="onNavClick()" routerLinkActive="active" class="mobile-nav-item">
                 <span class="m-icon">🏛️</span>
                 <span>Departments</span>
               </a>
-              <a routerLink="/alerts" (click)="mobileMenuOpen=false" routerLinkActive="active" class="mobile-nav-item">
+              <a routerLink="/alerts" (click)="onNavClick()" routerLinkActive="active" class="mobile-nav-item">
                 <span class="m-icon">🚨</span>
                 <span>Anomaly Alerts</span>
                 <span class="nav-alert-chip" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
               </a>
-              <a routerLink="/blog" (click)="mobileMenuOpen=false" routerLinkActive="active" class="mobile-nav-item">
+              <a routerLink="/blog" (click)="onNavClick()" routerLinkActive="active" class="mobile-nav-item">
                 <span class="m-icon">📰</span>
                 <span>Fiscal Insights</span>
               </a>
               @if (auth.hasRole(['Admin'])) {
-                <a routerLink="/admin" (click)="mobileMenuOpen=false" routerLinkActive="active" class="mobile-nav-item">
+                <a routerLink="/admin" (click)="onNavClick()" routerLinkActive="active" class="mobile-nav-item">
                   <span class="m-icon">⚙️</span>
                   <span>Admin Settings</span>
                 </a>
@@ -288,11 +288,11 @@ interface SearchItem {
                     <span class="mobile-user-role">{{ auth.user()?.role }}</span>
                   </div>
                 </div>
-                <button class="btn btn-outline mobile-signout-btn" (click)="auth.logout(); mobileMenuOpen=false">Sign Out</button>
+                <button class="btn btn-outline mobile-signout-btn" (click)="auth.logout(); onNavClick()">Sign Out</button>
               } @else {
                 <div class="mobile-auth-btns">
-                  <a routerLink="/login" (click)="mobileMenuOpen=false" class="nav-signin-btn mobile-btn">Sign In</a>
-                  <a routerLink="/register" (click)="mobileMenuOpen=false" class="nav-register-btn mobile-btn">Request Access</a>
+                  <a routerLink="/login" (click)="onNavClick()" class="nav-signin-btn mobile-btn">Sign In</a>
+                  <a routerLink="/register" (click)="onNavClick()" class="nav-register-btn mobile-btn">Request Access</a>
                 </div>
               }
             </div>
@@ -1729,6 +1729,17 @@ export class ShellComponent {
 
   scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  onNavClick() {
+    this.mobileMenuOpen = false;
+    this.searchOpen = false;
+    this.notifOpen = false;
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
   }
 
   @HostListener('window:scroll')
