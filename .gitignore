@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+*/node_modules/
+package-lock.json.lock
+
+# Environment & Secrets (NEVER commit actual secret keys or credentials)
+.env
+.env.*
+*.env
+!.env.example
+!backend/.env.example
+
+# Test and scratch scripts containing test credentials
+test_*.js
+backend/test_*.js
+frontend/test_*.js
+scratch/
+
+# Frontend & Build Outputs
+.angular/
+frontend/.angular/
+dist/
+frontend/dist/
+tmp/
+out-tsc/
+bazel-out/
+.sass-cache/
+coverage/
+
+# Backend Uploads (keep directory via .gitkeep, ignore runtime files)
+uploads/*
+!uploads/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
