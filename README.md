@@ -1,12 +1,16 @@
 # AI-Based Budget Utilization Monitoring System (BUMS)
 ### Real-Time Fiscal Intelligence, Public Expenditure Telemetry & Algorithmic Anomaly Detection for India
 
+[![Live Production](https://img.shields.io/badge/Live%20Demo-ai--based--budget--utilization--monitor--five.vercel.app-0D9488?style=for-the-badge&logo=vercel)](https://ai-based-budget-utilization-monitor-five.vercel.app)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A520.0.0-339933?logo=node.js)](https://nodejs.org)
 [![Angular](https://img.shields.io/badge/Angular-19.2-DD0031?logo=angular)](https://angular.dev)
 [![Express](https://img.shields.io/badge/Express-4.21-000000?logo=express)](https://expressjs.com)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas_Cloud-47A248?logo=mongodb)](https://mongodb.com)
-[![Vercel](https://img.shields.io/badge/Vercel-Serverless_Ready-000000?logo=vercel)](https://vercel.com)
+[![Deployment](https://img.shields.io/badge/Status-Active%20Deployment-success?logo=vercel)](https://ai-based-budget-utilization-monitor-five.vercel.app)
+
+> 🔗 **Live Website**: [https://ai-based-budget-utilization-monitor-five.vercel.app](https://ai-based-budget-utilization-monitor-five.vercel.app)
 
 ---
 
