@@ -35,6 +35,46 @@ export interface InsightItem {
   readTime: string;
 }
 
+export interface SchemeTelemetry {
+  id: string;
+  code: string;
+  name: string;
+  shortName: string;
+  ministry: string;
+  implementingAgency: string;
+  category: string;
+  imageUrl: string;
+  description: string;
+  fyAllocation: string;
+  fyAllocationPrev: string;
+  expenditureToDate: string;
+  utilizationRate: number;
+  velocityStatus: 'Optimal' | 'Accelerated' | 'Under Review';
+  fundSharingRatio: string;
+  physicalKPIs: {
+    label: string;
+    achieved: string;
+    target: string;
+    unit: string;
+    percentage: number;
+    icon: string;
+  }[];
+  quarterlyPacing: {
+    quarter: string;
+    targetPct: number;
+    actualPct: number;
+    amountCr: string;
+  }[];
+  topStates: { name: string; rate: number; expenditureCr: string }[];
+  laggingStates: { name: string; rate: number; expenditureCr: string }[];
+  telemetryHighlights: {
+    title: string;
+    status: 'success' | 'warning' | 'info';
+    detail: string;
+  }[];
+  trackingSystem: string;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -82,15 +122,20 @@ export interface InsightItem {
             </svg>
           </button>
 
-          <!-- Slides Track with Side-by-Side Overflow -->
+          <!-- Slides Track with Side-by-Side Overflow (Infinite Circular Loop) -->
           <div class="carousel-track-wrapper">
-            <div class="carousel-track" [style.transform]="getTrackTransform()">
+            <div 
+              class="carousel-track" 
+              [style.transform]="getTrackTransform()"
+              [style.transition]="isTransitionDisabled ? 'none' : 'transform 0.52s cubic-bezier(0.2, 0.9, 0.3, 1)'"
+              (transitionend)="onTransitionEnd()"
+            >
               <div 
-                *ngFor="let slide of carouselSlides; let i = index" 
+                *ngFor="let slide of displaySlides; let i = index" 
                 class="carousel-card-wrap"
-                [class.active-card]="i === currentSlideIndex"
-                [class.prev-card]="i === getPrevIndex()"
-                [class.next-card]="i === getNextIndex()"
+                [class.active-card]="i === currentVirtualIndex"
+                [class.prev-card]="i === currentVirtualIndex - 1"
+                [class.next-card]="i === currentVirtualIndex + 1"
                 (click)="onCardClick(i)"
               >
                 <div class="carousel-card">
@@ -128,13 +173,13 @@ export interface InsightItem {
           </button>
         </div>
 
-        <!-- Carousel Indicators / Dot Pills -->
+        <!-- Carousel Indicators / Dot Pills (Synchronized to Active Real Slide) -->
         <div class="carousel-indicators">
           <button 
             *ngFor="let s of carouselSlides; let i = index" 
             class="indicator-pill" 
-            [class.active]="i === currentSlideIndex"
-            (click)="goToSlide(i)"
+            [class.active]="i === getRealIndex()"
+            (click)="goToRealSlide(i)"
             [attr.aria-label]="'Go to slide ' + (i + 1)"
           ></button>
         </div>
@@ -288,84 +333,192 @@ export interface InsightItem {
               </div>
             </div>
 
-            <!-- Right Graphic: Isometric Fiscal Accountability Wheels -->
+            <!-- Right Graphic: 3D Holographic PFMS Telemetry Core -->
             <div class="resource-graphic-col">
-              <div class="isometric-illustration-box">
-                <svg class="iso-svg" viewBox="0 0 460 380" fill="none">
-                  <defs>
-                    <linearGradient id="gearGradTeal" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#2DD4BF" />
-                      <stop offset="100%" stop-color="#0F766E" />
-                    </linearGradient>
-                    <linearGradient id="gearGradIndigo" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#34D399" />
-                      <stop offset="100%" stop-color="#059669" />
-                    </linearGradient>
-                    <linearGradient id="accentYellow" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#FDE047" />
-                      <stop offset="100%" stop-color="#EAB308" />
-                    </linearGradient>
-                  </defs>
+              <div class="hologram-telemetry-stage" appHoverTilt [maxTilt]="10">
+                <!-- Ambient Backlight Aura -->
+                <div class="holo-ambient-glow"></div>
 
-                  <!-- Roads & Infrastructure Base -->
-                  <path d="M40 320 L230 220 L420 320 L230 420 Z" fill="#0A3F4C" opacity="0.6"/>
-                  <path d="M70 290 L230 200 L390 290" stroke="#14B8A6" stroke-width="3" stroke-dasharray="8 6" opacity="0.4"/>
+                <!-- 3D Perspective Scene Canvas -->
+                <div class="holo-3d-scene">
+                  
+                  <!-- Isometric Ground Matrix Plate -->
+                  <div class="iso-ground-plane">
+                    <div class="ground-grid-matrix"></div>
+                    <div class="ground-concentric-pulse p1"></div>
+                    <div class="ground-concentric-pulse p2"></div>
+                    <div class="ground-concentric-pulse p3"></div>
+                    <div class="ground-axis ground-axis-x"></div>
+                    <div class="ground-axis ground-axis-y"></div>
+                  </div>
 
-                  <!-- Left Interlocking Gear: Transparency (Spins cleanly in place) -->
-                  <g transform="translate(150, 230)">
-                    <g class="gear-spin-clockwise">
-                      <circle r="72" fill="url(#gearGradTeal)" />
-                      <circle r="42" fill="#073B4C" />
-                      <circle r="18" fill="#14B8A6" />
-                      <rect x="-10" y="-86" width="20" height="14" rx="4" fill="#2DD4BF"/>
-                      <rect x="-10" y="72" width="20" height="14" rx="4" fill="#2DD4BF"/>
-                      <rect x="-86" y="-10" width="14" height="20" rx="4" fill="#2DD4BF"/>
-                      <rect x="72" y="-10" width="14" height="20" rx="4" fill="#2DD4BF"/>
-                      <rect x="-60" y="-60" width="18" height="18" rx="4" fill="#2DD4BF" transform="rotate(45)"/>
-                      <rect x="42" y="42" width="18" height="18" rx="4" fill="#2DD4BF" transform="rotate(45)"/>
-                      <text x="0" y="5" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="bold">TRANSPARENCY</text>
-                    </g>
-                  </g>
+                  <!-- Upward Holographic Light Pillar -->
+                  <div class="holo-beam-column">
+                    <div class="beam-core-glow"></div>
+                    <div class="beam-scanlines"></div>
+                  </div>
 
-                  <!-- Right Interlocking Gear: Participation & PFMS (Spins cleanly in place) -->
-                  <g transform="translate(290, 180)">
-                    <g class="gear-spin-counter">
-                      <circle r="65" fill="url(#gearGradIndigo)" />
-                      <circle r="36" fill="#073B4C" />
-                      <circle r="14" fill="#34D399" />
-                      <rect x="-8" y="-76" width="16" height="12" rx="3" fill="#34D399"/>
-                      <rect x="-8" y="64" width="16" height="12" rx="3" fill="#34D399"/>
-                      <rect x="-76" y="-8" width="12" height="16" rx="3" fill="#34D399"/>
-                      <rect x="64" y="-8" width="12" height="16" rx="3" fill="#34D399"/>
-                      <text x="0" y="4" text-anchor="middle" fill="#FFFFFF" font-size="10" font-weight="bold">PFMS TELEMETRY</text>
-                    </g>
-                  </g>
+                  <!-- Concentric 3D Gyroscopic Telemetry Rings -->
+                  <!-- Ring 1: Outer Governance Ring -->
+                  <div class="gyro-ring gyro-ring-outer">
+                    <div class="ring-tracker tracker-outer">
+                      <span class="satellite-pill">PFMS 2.0 GATEWAY</span>
+                    </div>
+                    <div class="ring-tracker tracker-outer-opposite">
+                      <span class="satellite-beacon-dot"></span>
+                    </div>
+                  </div>
 
-                  <!-- Floating Citizens, Documents and Data Buildings -->
-                  <rect x="240" y="80" width="80" height="42" rx="6" fill="url(#accentYellow)" />
-                  <rect x="250" y="88" width="18" height="14" rx="2" fill="#0A3F4C" />
-                  <rect x="274" y="88" width="18" height="14" rx="2" fill="#0A3F4C" />
-                  <circle cx="258" cy="126" r="6" fill="#1E293B" />
-                  <circle cx="304" cy="126" r="6" fill="#1E293B" />
+                  <!-- Ring 2: Middle SNA & APBS Transfer Ring -->
+                  <div class="gyro-ring gyro-ring-middle">
+                    <div class="ring-tracker tracker-middle">
+                      <span class="satellite-pill amber">SNA &bull; APBS</span>
+                    </div>
+                  </div>
 
-                  <!-- Floating Audit Paper / Chart -->
-                  <g transform="translate(60, 100)">
-                    <rect width="65" height="85" rx="5" fill="#FFFFFF" opacity="0.9" />
-                    <line x1="12" y1="20" x2="53" y2="20" stroke="#0F766E" stroke-width="4" stroke-linecap="round"/>
-                    <line x1="12" y1="34" x2="45" y2="34" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
-                    <line x1="12" y1="46" x2="50" y2="46" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
-                    <line x1="12" y1="58" x2="38" y2="58" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
-                    <circle cx="48" cy="68" r="8" fill="#10B981" />
-                    <path d="M44 68 L47 71 L53 64" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
-                  </g>
+                  <!-- Ring 3: Inner Velocity Ring -->
+                  <div class="gyro-ring gyro-ring-inner">
+                    <div class="inner-energy-pulse"></div>
+                  </div>
 
-                  <!-- Advocate Figures -->
-                  <circle cx="190" cy="120" r="10" fill="#F8FAFC" />
-                  <path d="M180 145 C180 135 200 135 200 145 Z" fill="#2DD4BF" />
+                  <!-- Central Floating 3D Fiscal Core -->
+                  <div class="holo-central-core">
+                    <div class="core-float-wrapper">
+                      <div class="core-shield-prism">
+                        <div class="core-symbol-wrap">
+                          <span class="core-symbol">&#8377;</span>
+                        </div>
+                        <div class="core-orbital-halo">
+                          <span class="dot d1"></span>
+                          <span class="dot d2"></span>
+                          <span class="dot d3"></span>
+                          <span class="dot d4"></span>
+                        </div>
+                      </div>
+                      <div class="core-shadow-ground"></div>
+                    </div>
+                  </div>
 
-                  <circle cx="360" cy="140" r="9" fill="#F8FAFC" />
-                  <path d="M352 162 C352 152 368 152 368 162 Z" fill="#F59E0B" />
-                </svg>
+                  <!-- Dynamic SVG Neon Stream Energy Vectors -->
+                  <svg class="holo-svg-streams" viewBox="0 0 460 420" fill="none">
+                    <defs>
+                      <linearGradient id="streamGrad1" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#0D9488" stop-opacity="0.1"/>
+                        <stop offset="50%" stop-color="#2DD4BF" stop-opacity="0.95"/>
+                        <stop offset="100%" stop-color="#A7F3D0" stop-opacity="1"/>
+                      </linearGradient>
+                      <linearGradient id="streamGrad2" x1="0%" y1="100%" x2="0%" y2="0%">
+                        <stop offset="0%" stop-color="#059669" stop-opacity="0.1"/>
+                        <stop offset="50%" stop-color="#34D399" stop-opacity="0.9"/>
+                        <stop offset="100%" stop-color="#6EE7B7" stop-opacity="1"/>
+                      </linearGradient>
+                      <filter id="neonBeamGlow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="3.5" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                      </filter>
+                    </defs>
+
+                    <!-- Stream 1: To Top-Right DBT Chip -->
+                    <path d="M 230 310 C 240 240, 320 220, 345 140" 
+                          class="energy-stream-line s1" 
+                          stroke="url(#streamGrad1)" 
+                          stroke-width="2.2" 
+                          stroke-dasharray="10 14" 
+                          filter="url(#neonBeamGlow)"/>
+
+                    <!-- Stream 2: To Bottom-Left CAG Chip -->
+                    <path d="M 230 310 C 190 280, 110 270, 95 240" 
+                          class="energy-stream-line s2" 
+                          stroke="url(#streamGrad2)" 
+                          stroke-width="2" 
+                          stroke-dasharray="8 12" 
+                          filter="url(#neonBeamGlow)"/>
+
+                    <!-- Stream 3: To Top-Left Pacing Chip -->
+                    <path d="M 230 310 C 210 230, 140 180, 125 110" 
+                          class="energy-stream-line s3" 
+                          stroke="url(#streamGrad1)" 
+                          stroke-width="2" 
+                          stroke-dasharray="12 16" 
+                          filter="url(#neonBeamGlow)"/>
+                  </svg>
+
+                  <!-- 3D Layered Glassmorphic Telemetry HUD Chips (Floating in True Depth) -->
+                  
+                  <!-- HUD Card 1: Top Right (Z-depth: 55px) -->
+                  <div class="hud-chip chip-top-right">
+                    <div class="hud-chip-inner">
+                      <div class="hud-header">
+                        <span class="hud-indicator-dot pulse-teal"></span>
+                        <span class="hud-category">LIVE PFMS 2.0 FLOW</span>
+                        <span class="hud-badge-green">99.8% APBS</span>
+                      </div>
+                      <div class="hud-value-row">
+                        <span class="hud-primary-val">&#8377;4.20 <small class="unit-cr">Lakh Cr</small></span>
+                      </div>
+                      <div class="hud-sub-desc">
+                        Direct Benefit Transfer &bull; Zero Intermediaries
+                      </div>
+                      <!-- Live Velocity Wave Bars -->
+                      <div class="hud-spark-bars">
+                        <span class="bar b1"></span>
+                        <span class="bar b2"></span>
+                        <span class="bar b3"></span>
+                        <span class="bar b4"></span>
+                        <span class="bar b5"></span>
+                        <span class="bar b6"></span>
+                        <span class="bar b7"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- HUD Card 2: Bottom Left (Z-depth: 65px) -->
+                  <div class="hud-chip chip-bottom-left">
+                    <div class="hud-chip-inner">
+                      <div class="hud-header">
+                        <span class="hud-indicator-dot pulse-emerald"></span>
+                        <span class="hud-category">CAG AUDIT SENTINEL</span>
+                        <span class="hud-badge-tag">CLEAN PASS</span>
+                      </div>
+                      <div class="hud-value-row">
+                        <span class="hud-primary-val text-emerald">91.4 <small class="unit-cr">/ 100</small></span>
+                      </div>
+                      <div class="hud-sub-desc">
+                        Real-Time Anomaly Interception Across 36 States &amp; UTs
+                      </div>
+                      <div class="hud-telemetry-micro-tags">
+                        <span class="micro-tag">&#10003; 0 Unreconciled</span>
+                        <span class="micro-tag">&#10003; Automated Audit</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- HUD Card 3: Top Left (Z-depth: 40px) -->
+                  <div class="hud-chip chip-top-left">
+                    <div class="hud-chip-inner">
+                      <div class="hud-header">
+                        <span class="hud-category">CAPITAL PACING</span>
+                        <span class="hud-speed-badge">&#9889; OPTIMAL</span>
+                      </div>
+                      <div class="hud-value-row">
+                        <span class="hud-primary-val text-cyan">82% <small class="unit-cr">Pacing</small></span>
+                      </div>
+                      <div class="hud-progress-track">
+                        <div class="hud-progress-fill"></div>
+                      </div>
+                      <div class="hud-sub-tiny">Pacing aligned with Q4 targets</div>
+                    </div>
+                  </div>
+
+                  <!-- HUD Pill 4: Bottom Center Live Ticker (Z-depth: 48px) -->
+                  <div class="hud-chip chip-bottom-ticker">
+                    <div class="ticker-content">
+                      <span class="ticker-live-icon">&#10022;</span>
+                      <span class="ticker-text"><strong>4,280 Tx/sec</strong> &bull; 1.28 Billion Aadhaar Validations &bull; Instant Settlement</span>
+                    </div>
+                  </div>
+
+                </div>
               </div>
             </div>
           </div>
@@ -373,82 +526,80 @@ export interface InsightItem {
       </section>
 
       <!-- ══════════════════════════════════════════════════════════
-           4. KEY TOPICS SECTION (100% India-Centric)
+           4. KEY PRIORITY SECTORS & SCHEME TELEMETRY (100% India-Centric)
       ══════════════════════════════════════════════════════════ -->
       <section class="key-topics-section">
         <div class="topics-inner-wrap">
+          
+          <!-- Perfectly Aligned Header Row -->
           <div class="topics-header-row">
-            <h2 class="topics-title">Key Priority Sectors</h2>
+            <div class="topics-title-col">
+              <span class="topics-eyebrow">CENTRAL BUDGET TELEMETRY &bull; FY 2026-27</span>
+              <h2 class="topics-title">Key Priority Sectors</h2>
+            </div>
             <div class="topics-intro-col">
               <p class="topics-intro-text">
                 Explore deep dives into India's highest allocated central schemes, state absorption trajectories, and district-level social infrastructure funding.
               </p>
-              <a routerLink="/blog" class="topics-view-all">
-                <span>View all</span>
-                <span class="link-circle-arrow">➔</span>
-              </a>
+              <div class="topics-meta-badge">
+                <span class="pulse-indicator"></span>
+                <span>Live PFMS Telemetry &bull; 6 Flagship Missions Monitored</span>
+              </div>
             </div>
           </div>
 
-          <!-- 3-Column Topic Cards -->
+          <!-- 6-Card Priority Schemes Grid -->
           <div class="topics-grid">
-            <!-- Topic 1: Primary & Maternal Healthcare -->
-            <div class="topic-card" appHoverTilt routerLink="/blog">
+            <div 
+              *ngFor="let scheme of prioritySchemes" 
+              class="topic-card" 
+              appHoverTilt 
+              [maxTilt]="6"
+              (click)="openSchemeModal(scheme)"
+            >
               <div class="topic-img-frame">
                 <img 
-                  src="/assets/healthcare-nhm.jpg" 
-                  alt="National Health Mission clinic"
+                  [src]="scheme.imageUrl" 
+                  [alt]="scheme.name"
                   class="topic-img"
                   loading="lazy"
                 />
+                <span class="scheme-category-badge">{{ scheme.category }}</span>
               </div>
               <div class="topic-body">
-                <h3 class="topic-name">Primary &amp; Maternal Healthcare (NHM)</h3>
-                <p class="topic-desc">Tracking National Health Mission grants, Janani Suraksha allocations, and district hospital supply chains across Uttar Pradesh, Bihar, and Rajasthan.</p>
-                <span class="topic-link">
-                  <span>Explore scheme telemetry</span>
-                  <span class="link-circle-arrow">➔</span>
-                </span>
-              </div>
-            </div>
+                <div class="topic-ministry-tag">{{ scheme.ministry }}</div>
+                <h3 class="topic-name">{{ scheme.name }}</h3>
+                <p class="topic-desc">{{ scheme.description }}</p>
 
-            <!-- Topic 2: Direct Benefit Transfers & Rural Connectivity -->
-            <div class="topic-card" appHoverTilt routerLink="/blog">
-              <div class="topic-img-frame">
-                <img 
-                  src="/assets/pmgsy-roads.jpg" 
-                  alt="Rural road and DBT digital payments"
-                  class="topic-img"
-                  loading="lazy"
-                />
-              </div>
-              <div class="topic-body">
-                <h3 class="topic-name">DBT &amp; Rural Connectivity (PMGSY)</h3>
-                <p class="topic-desc">Monitoring ₹4.2L Cr annual DBT pipelines and PMGSY all-weather road construction linking 1.4 lakh remote habitations across all states.</p>
-                <span class="topic-link">
-                  <span>Explore scheme telemetry</span>
-                  <span class="link-circle-arrow">➔</span>
-                </span>
-              </div>
-            </div>
+                <!-- Scheme Telemetry Mini Dashboard Strip -->
+                <div class="scheme-mini-metrics">
+                  <div class="mini-metric-item">
+                    <span class="mini-label">Budget Outlay</span>
+                    <strong class="mini-val">{{ scheme.fyAllocation }}</strong>
+                  </div>
+                  <div class="mini-metric-item">
+                    <span class="mini-label">PFMS Absorbed</span>
+                    <strong class="mini-val val-teal">{{ scheme.utilizationRate }}%</strong>
+                  </div>
+                  <div class="mini-metric-item">
+                    <span class="mini-label">Pacing</span>
+                    <span class="pacing-pill" [ngClass]="getPacingClass(scheme.velocityStatus)">
+                      {{ scheme.velocityStatus }}
+                    </span>
+                  </div>
+                </div>
 
-            <!-- Topic 3: Clean Water & Sanitation -->
-            <div class="topic-card" appHoverTilt routerLink="/blog">
-              <div class="topic-img-frame">
-                <img 
-                  src="/assets/jal-jeevan-water.jpg" 
-                  alt="Jal Jeevan Mission drinking water pipeline"
-                  class="topic-img"
-                  loading="lazy"
-                />
-              </div>
-              <div class="topic-body">
-                <h3 class="topic-name">Drinking Water (Jal Jeevan Mission)</h3>
-                <p class="topic-desc">Algorithmic expenditure tracking for functional household tap water connections across 6 lakh villages and state implementation agencies.</p>
-                <span class="topic-link">
-                  <span>Explore scheme telemetry</span>
-                  <span class="link-circle-arrow">➔</span>
-                </span>
+                <div class="scheme-progress-bar-wrap">
+                  <div class="scheme-progress-bar-fill" [style.width.%]="scheme.utilizationRate"></div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="topic-footer-row">
+                  <button type="button" class="btn-telemetry-explore" (click)="openSchemeModal(scheme, $event)">
+                    <span>Explore Scheme Telemetry</span>
+                    <span class="link-circle-arrow">➔</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -456,11 +607,11 @@ export interface InsightItem {
       </section>
 
       <!-- ══════════════════════════════════════════════════════════
-           5. LATEST INSIGHTS & LATEST EVENT SECTION (100% India-Centric)
+           5. LATEST INSIGHTS & LATEST EVENT SECTION (3D ANIMATIONS)
       ══════════════════════════════════════════════════════════ -->
       <section class="insights-events-section">
         <div class="insights-events-wrap">
-          <!-- Left 3 Columns: LATEST INSIGHTS -->
+          <!-- Left 3 Columns: LATEST INSIGHTS with 3D Tilt & Elevation -->
           <div class="insights-block">
             <div class="insights-header-row">
               <h2 class="insights-title">LATEST FISCAL INSIGHTS</h2>
@@ -471,8 +622,8 @@ export interface InsightItem {
             </div>
 
             <div class="insights-cards-row">
-              <!-- Insight 1 -->
-              <article class="insight-card" routerLink="/blog">
+              <!-- Insight 1 (3D Animated) -->
+              <article class="insight-card card-3d" appHoverTilt [maxTilt]="7" routerLink="/blog">
                 <div class="insight-thumb-box">
                   <img 
                     src="/assets/dbt-transfer.jpg" 
@@ -480,6 +631,7 @@ export interface InsightItem {
                     class="insight-thumb-img"
                     loading="lazy"
                   />
+                  <span class="insight-tag-badge">DIRECT BENEFIT TRANSFER</span>
                 </div>
                 <div class="insight-content">
                   <h3 class="insight-headline">The Evolution of Direct Benefit Transfers: Eliminating Ghost Intermediaries in Rural Welfare</h3>
@@ -488,8 +640,8 @@ export interface InsightItem {
                 </div>
               </article>
 
-              <!-- Insight 2 -->
-              <article class="insight-card" routerLink="/blog">
+              <!-- Insight 2 (3D Animated) -->
+              <article class="insight-card card-3d" appHoverTilt [maxTilt]="7" routerLink="/blog">
                 <div class="insight-thumb-box">
                   <img 
                     src="/assets/state-capex-infra.jpg" 
@@ -497,6 +649,7 @@ export interface InsightItem {
                     class="insight-thumb-img"
                     loading="lazy"
                   />
+                  <span class="insight-tag-badge">CAPEX VELOCITY</span>
                 </div>
                 <div class="insight-content">
                   <h3 class="insight-headline">State Capital Expenditure Velocity: How Maharashtra &amp; Gujarat Maintained 80%+ Absorption</h3>
@@ -505,8 +658,8 @@ export interface InsightItem {
                 </div>
               </article>
 
-              <!-- Insight 3 -->
-              <article class="insight-card" routerLink="/blog">
+              <!-- Insight 3 (3D Animated) -->
+              <article class="insight-card card-3d" appHoverTilt [maxTilt]="7" routerLink="/blog">
                 <div class="insight-thumb-box">
                   <img 
                     src="/assets/pfms-ai-data.jpg" 
@@ -514,9 +667,9 @@ export interface InsightItem {
                     class="insight-thumb-img"
                     loading="lazy"
                   />
+                  <span class="insight-tag-badge">PFMS AI OVERSIGHT</span>
                 </div>
                 <div class="insight-content">
-                  <span class="insight-subtag">PFMS AI OVERSIGHT</span>
                   <h3 class="insight-headline">AI in Public Finance: How Machine Learning Prevents March Rushes and Expenditure Surges in PFMS</h3>
                   <div class="insight-date">AUG 04, 2026</div>
                   <div class="insight-authors">Ananya Sen, Digital India Research Lead</div>
@@ -525,9 +678,9 @@ export interface InsightItem {
             </div>
           </div>
 
-          <!-- Right Column: LATEST EVENT -->
+          <!-- Right Column: LATEST EVENT (3D Animated) -->
           <div class="event-featured-col">
-            <div class="event-card-container">
+            <div class="event-card-container card-3d" appHoverTilt [maxTilt]="6">
               <span class="event-kicker">LATEST NATIONAL EVENT</span>
 
               <!-- Event Poster Preview -->
@@ -584,6 +737,250 @@ export interface InsightItem {
           </div>
         </div>
       </section>
+
+      <!-- ══════════════════════════════════════════════════════════
+           SCHEME TELEMETRY DEEP-DIVE MODAL (RESEARCH-BACKED METRICS)
+      ══════════════════════════════════════════════════════════ -->
+      <div 
+        *ngIf="isSchemeModalOpen && selectedScheme" 
+        class="scheme-modal-backdrop animate-fade-in" 
+        (click)="closeSchemeModal()"
+      >
+        <div class="scheme-modal-glass" (click)="$event.stopPropagation()">
+          
+          <!-- Modal Header -->
+          <div class="scheme-modal-header">
+            <div class="scheme-header-info">
+              <div class="scheme-code-badge">
+                <span class="pulse-indicator"></span>
+                <span>PFMS TELEMETRY DEEP DIVE &bull; {{ selectedScheme.code }}</span>
+              </div>
+              <h2 class="scheme-modal-title">{{ selectedScheme.name }}</h2>
+              <div class="scheme-header-sub">
+                <span class="scheme-meta-item">🏛️ {{ selectedScheme.ministry }}</span>
+                <span class="scheme-meta-sep">&bull;</span>
+                <span class="scheme-meta-item">🎯 {{ selectedScheme.implementingAgency }}</span>
+                <span class="scheme-meta-sep">&bull;</span>
+                <span class="scheme-meta-item tag-sponsored">{{ selectedScheme.category }}</span>
+              </div>
+            </div>
+            <button class="scheme-modal-close" (click)="closeSchemeModal()" aria-label="Close modal">✕</button>
+          </div>
+
+          <!-- Top 4 Live Telemetry KPIs -->
+          <div class="scheme-kpi-banner">
+            <div class="kpi-banner-card">
+              <span class="kpi-banner-label">UNION BUDGET OUTLAY (FY 26-27)</span>
+              <div class="kpi-banner-value">{{ selectedScheme.fyAllocation }}</div>
+              <span class="kpi-banner-sub">Prev FY: {{ selectedScheme.fyAllocationPrev }}</span>
+            </div>
+            <div class="kpi-banner-card">
+              <span class="kpi-banner-label">DISBURSED EXPENDITURE</span>
+              <div class="kpi-banner-value val-teal">{{ selectedScheme.expenditureToDate }}</div>
+              <span class="kpi-banner-sub">PFMS Authenticated</span>
+            </div>
+            <div class="kpi-banner-card">
+              <span class="kpi-banner-label">EXPENDITURE VELOCITY</span>
+              <div class="kpi-banner-value val-emerald">{{ selectedScheme.utilizationRate }}%</div>
+              <div class="pacing-badge-row">
+                <span class="pacing-pill" [ngClass]="getPacingClass(selectedScheme.velocityStatus)">
+                  {{ selectedScheme.velocityStatus }} Pacing
+                </span>
+              </div>
+            </div>
+            <div class="kpi-banner-card">
+              <span class="kpi-banner-label">CENTRE : STATE SHARE</span>
+              <div class="kpi-banner-value">{{ selectedScheme.fundSharingRatio.split(' ')[0] }}</div>
+              <span class="kpi-banner-sub">{{ selectedScheme.fundSharingRatio }}</span>
+            </div>
+          </div>
+
+          <!-- Interactive Deep-Dive Tabs -->
+          <div class="scheme-tabs-nav">
+            <button 
+              type="button" 
+              class="scheme-tab-btn" 
+              [class.active]="activeSchemeTab === 'kpis'" 
+              (click)="activeSchemeTab = 'kpis'"
+            >
+              <span>📊 Physical Milestones &amp; Ground KPIs</span>
+            </button>
+            <button 
+              type="button" 
+              class="scheme-tab-btn" 
+              [class.active]="activeSchemeTab === 'pacing'" 
+              (click)="activeSchemeTab = 'pacing'"
+            >
+              <span>📈 Quarterly Pacing Velocity</span>
+            </button>
+            <button 
+              type="button" 
+              class="scheme-tab-btn" 
+              [class.active]="activeSchemeTab === 'states'" 
+              (click)="activeSchemeTab = 'states'"
+            >
+              <span>🗺️ State Absorption Leaderboard</span>
+            </button>
+            <button 
+              type="button" 
+              class="scheme-tab-btn" 
+              [class.active]="activeSchemeTab === 'alerts'" 
+              (click)="activeSchemeTab = 'alerts'"
+            >
+              <span>⚡ PFMS Telemetry &amp; AI Alerts</span>
+            </button>
+          </div>
+
+          <!-- Tab Content Body -->
+          <div class="scheme-modal-body">
+            
+            <!-- TAB 1: PHYSICAL KPIS -->
+            <div *ngIf="activeSchemeTab === 'kpis'" class="tab-pane animate-fade-in">
+              <div class="pane-headline">
+                <h3>Verifiable Physical Deliverables &amp; Infrastructure Milestones</h3>
+                <p>Ground delivery metrics tracked through geo-tagged field surveys and digital outcome registers.</p>
+              </div>
+              <div class="physical-kpi-grid">
+                <div *ngFor="let kpi of selectedScheme.physicalKPIs" class="kpi-detail-card">
+                  <div class="kpi-top">
+                    <span class="kpi-icon">{{ kpi.icon }}</span>
+                    <span class="kpi-completion-badge">{{ kpi.percentage }}%</span>
+                  </div>
+                  <h4 class="kpi-label">{{ kpi.label }}</h4>
+                  <div class="kpi-numbers">
+                    <strong>{{ kpi.achieved }}</strong>
+                    <span class="kpi-target-label">/ target {{ kpi.target }} {{ kpi.unit }}</span>
+                  </div>
+                  <div class="kpi-bar-track">
+                    <div class="kpi-bar-fill" [style.width.%]="kpi.percentage"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: QUARTERLY PACING -->
+            <div *ngIf="activeSchemeTab === 'pacing'" class="tab-pane animate-fade-in">
+              <div class="pane-headline">
+                <h3>Fiscal Pacing Velocity (Actual Disbursed vs Ideal Target)</h3>
+                <p>Eliminating March rushes by enforcing quarterly expenditure glide-paths under MoF guidelines.</p>
+              </div>
+              <div class="pacing-cards-grid">
+                <div *ngFor="let pace of selectedScheme.quarterlyPacing" class="pacing-card">
+                  <div class="pacing-quarter-badge">{{ pace.quarter }}</div>
+                  <div class="pacing-stat-main">
+                    <div class="stat-amt">{{ pace.amountCr }}</div>
+                    <div class="stat-sub">Actual Disbursed</div>
+                  </div>
+                  <div class="pacing-comparison">
+                    <div class="comp-item">
+                      <span>Actual Pacing:</span>
+                      <strong class="text-teal">{{ pace.actualPct }}%</strong>
+                    </div>
+                    <div class="comp-item">
+                      <span>Target Glide:</span>
+                      <strong>{{ pace.targetPct }}%</strong>
+                    </div>
+                  </div>
+                  <div class="pacing-double-bars">
+                    <div class="bar-row">
+                      <span class="bar-lbl">Act</span>
+                      <div class="track"><div class="fill-act" [style.width.%]="pace.actualPct"></div></div>
+                    </div>
+                    <div class="bar-row">
+                      <span class="bar-lbl">Tgt</span>
+                      <div class="track"><div class="fill-tgt" [style.width.%]="pace.targetPct"></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: STATE ABSORPTION LEADERBOARD -->
+            <div *ngIf="activeSchemeTab === 'states'" class="tab-pane animate-fade-in">
+              <div class="pane-headline">
+                <h3>Inter-State Fund Absorption &amp; Execution Disparity</h3>
+                <p>Comparing high-velocity state implementation agencies with states exhibiting unspent balances.</p>
+              </div>
+              <div class="states-comparison-grid">
+                <!-- Top Performing States -->
+                <div class="state-group-box top-group">
+                  <div class="group-title-row">
+                    <span class="group-icon">🏆</span>
+                    <h4>Top Performing States (Highest Absorption)</h4>
+                  </div>
+                  <div class="state-rows-list">
+                    <div *ngFor="let st of selectedScheme.topStates; let idx = index" class="state-row-item">
+                      <div class="st-rank">#{{ idx + 1 }}</div>
+                      <div class="st-name">{{ st.name }}</div>
+                      <div class="st-expenditure">{{ st.expenditureCr }}</div>
+                      <div class="st-rate-badge badge-green">{{ st.rate }}%</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Lagging States -->
+                <div class="state-group-box lag-group">
+                  <div class="group-title-row">
+                    <span class="group-icon">⚠️</span>
+                    <h4>Watchlist &amp; Under-Absorbing States</h4>
+                  </div>
+                  <div class="state-rows-list">
+                    <div *ngFor="let st of selectedScheme.laggingStates" class="state-row-item">
+                      <div class="st-rank-lag">!</div>
+                      <div class="st-name">{{ st.name }}</div>
+                      <div class="st-expenditure">{{ st.expenditureCr }}</div>
+                      <div class="st-rate-badge badge-amber">{{ st.rate }}%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 4: PFMS & AI ALERTS -->
+            <div *ngIf="activeSchemeTab === 'alerts'" class="tab-pane animate-fade-in">
+              <div class="pane-headline">
+                <h3>Automated PFMS Telemetry &amp; Anomaly Detection Feeds</h3>
+                <p>AI-driven surveillance flags unspent parking, voucher bunching, and DBT pipeline latency.</p>
+              </div>
+              <div class="telemetry-alerts-list">
+                <div *ngFor="let alert of selectedScheme.telemetryHighlights" class="alert-item-card" [ngClass]="'status-' + alert.status">
+                  <div class="alert-icon-col">
+                    <span *ngIf="alert.status === 'success'">✅</span>
+                    <span *ngIf="alert.status === 'warning'">⚠️</span>
+                    <span *ngIf="alert.status === 'info'">ℹ️</span>
+                  </div>
+                  <div class="alert-body-col">
+                    <div class="alert-title">{{ alert.title }}</div>
+                    <div class="alert-detail">{{ alert.detail }}</div>
+                  </div>
+                  <div class="alert-badge">{{ alert.status | uppercase }}</div>
+                </div>
+              </div>
+              <div class="tracking-architecture-box">
+                <span class="arch-label">Active Monitoring Architecture:</span>
+                <code>{{ selectedScheme.trackingSystem }}</code>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Footer Actions -->
+          <div class="scheme-modal-footer">
+            <div class="footer-left-info">
+              <span>Source: Union Budget FY 2026-27 &bull; PFMS Public Financial Telemetry</span>
+            </div>
+            <div class="footer-btn-group">
+              <button type="button" class="btn-modal-ghost" (click)="closeSchemeModal()">
+                Close
+              </button>
+              <a routerLink="/dashboard" class="btn-modal-action" (click)="closeSchemeModal()">
+                <span>Open in Full Dashboard Telemetry</span>
+                <span>➔</span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
 
       <!-- ══════════════════════════════════════════════════════════
            6. COMPACT EVENT REGISTRATION MODAL (FITS IN ACTIVE VIEWPORT)
@@ -929,7 +1326,6 @@ export interface InsightItem {
 
     .carousel-track {
       display: flex;
-      transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: transform;
     }
 
@@ -940,7 +1336,7 @@ export interface InsightItem {
       box-sizing: border-box;
       opacity: 0.55;
       transform: scale(0.95);
-      transition: all 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.52s cubic-bezier(0.2, 0.9, 0.3, 1), transform 0.52s cubic-bezier(0.2, 0.9, 0.3, 1);
       cursor: pointer;
     }
 
@@ -1469,43 +1865,658 @@ export interface InsightItem {
       border-color: #2DD4BF;
     }
 
-    .isometric-illustration-box {
+    /* ══ 3D HOLOGRAPHIC PFMS TELEMETRY CORE (Featured Review) ══ */
+    .resource-graphic-col {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1200px;
+      min-height: 440px;
+    }
+
+    .hologram-telemetry-stage {
+      position: relative;
       width: 100%;
-      height: 100%;
+      max-width: 470px;
+      height: 440px;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: visible;
+      transform-style: preserve-3d;
+      user-select: none;
+      transition: transform 0.15s ease-out;
     }
 
-    .iso-svg {
+    .holo-ambient-glow {
+      position: absolute;
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(45, 212, 191, 0.24) 0%, rgba(13, 148, 136, 0.1) 45%, transparent 72%);
+      filter: blur(40px);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: holoGlowAura 6s ease-in-out infinite alternate;
+    }
+
+    .holo-3d-scene {
+      position: relative;
       width: 100%;
-      max-width: 460px;
-      height: auto;
+      height: 100%;
+      transform-style: preserve-3d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Isometric Ground Matrix Plate */
+    .iso-ground-plane {
+      position: absolute;
+      bottom: 25px;
+      width: 360px;
+      height: 360px;
+      transform: rotateX(68deg) rotateZ(-32deg);
+      transform-style: preserve-3d;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(45, 212, 191, 0.4);
+      background: radial-gradient(circle, rgba(7, 59, 76, 0.85) 0%, rgba(3, 23, 27, 0.55) 70%, transparent 100%);
+      box-shadow: 0 0 50px rgba(20, 184, 166, 0.3), inset 0 0 45px rgba(20, 184, 166, 0.2);
       overflow: visible;
     }
 
-    .gear-spin-clockwise {
-      transform-origin: 0px 0px;
-      animation: rotateClock 24s linear infinite;
+    .ground-grid-matrix {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background-image: 
+        linear-gradient(rgba(45, 212, 191, 0.14) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(45, 212, 191, 0.14) 1px, transparent 1px);
+      background-size: 24px 24px;
     }
 
-    .gear-spin-counter {
-      transform-origin: 0px 0px;
-      animation: rotateCounter 24s linear infinite;
+    .ground-axis {
+      position: absolute;
+      background: rgba(45, 212, 191, 0.45);
     }
 
-    @keyframes rotateClock {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
+    .ground-axis-x {
+      top: 50%;
+      left: 8%;
+      right: 8%;
+      height: 1px;
     }
 
-    @keyframes rotateCounter {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(-360deg); }
+    .ground-axis-y {
+      left: 50%;
+      top: 8%;
+      bottom: 8%;
+      width: 1px;
     }
 
-    /* ══ 4. KEY TOPICS SECTION ══ */
+    .ground-concentric-pulse {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 80px;
+      height: 80px;
+      margin: -40px 0 0 -40px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(45, 212, 191, 0.75);
+      box-shadow: 0 0 16px rgba(45, 212, 191, 0.4);
+      animation: sonarPulse 4.5s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+    }
+
+    .ground-concentric-pulse.p2 {
+      animation-delay: 1.5s;
+    }
+
+    .ground-concentric-pulse.p3 {
+      animation-delay: 3s;
+    }
+
+    /* Upward Holographic Light Pillar */
+    .holo-beam-column {
+      position: absolute;
+      bottom: 75px;
+      width: 120px;
+      height: 240px;
+      background: linear-gradient(to top, rgba(45, 212, 191, 0.42) 0%, rgba(20, 184, 166, 0.14) 55%, transparent 100%);
+      clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%);
+      pointer-events: none;
+      filter: blur(1px);
+      animation: holoBeamFlicker 3.5s ease-in-out infinite alternate;
+    }
+
+    .beam-core-glow {
+      position: absolute;
+      bottom: 0;
+      left: 35%;
+      right: 35%;
+      height: 70%;
+      background: linear-gradient(to top, rgba(255, 255, 255, 0.5) 0%, rgba(45, 212, 191, 0.4) 40%, transparent 100%);
+      filter: blur(3px);
+    }
+
+    .beam-scanlines {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(45, 212, 191, 0.15) 4px, rgba(45, 212, 191, 0.15) 8px);
+      animation: scanlineScroll 6s linear infinite;
+    }
+
+    /* Concentric 3D Gyroscopic Telemetry Rings */
+    .gyro-ring {
+      position: absolute;
+      border-radius: 50%;
+      transform-style: preserve-3d;
+      pointer-events: none;
+    }
+
+    .gyro-ring-outer {
+      width: 320px;
+      height: 320px;
+      border: 1.5px solid rgba(45, 212, 191, 0.4);
+      box-shadow: 0 0 20px rgba(45, 212, 191, 0.15);
+      transform: rotateX(66deg) rotateY(16deg);
+      animation: rotateOuterGyro 28s linear infinite;
+    }
+
+    .gyro-ring-middle {
+      width: 240px;
+      height: 240px;
+      border: 1.5px dashed rgba(52, 211, 153, 0.55);
+      box-shadow: 0 0 15px rgba(52, 211, 153, 0.2);
+      transform: rotateX(62deg) rotateY(-18deg);
+      animation: rotateMiddleGyro 20s linear infinite;
+    }
+
+    .gyro-ring-inner {
+      width: 170px;
+      height: 170px;
+      border: 2px solid rgba(45, 212, 191, 0.7);
+      border-top-color: #6EE7B7;
+      border-bottom-color: #0D9488;
+      box-shadow: 0 0 22px rgba(45, 212, 191, 0.4), inset 0 0 15px rgba(45, 212, 191, 0.3);
+      transform: rotateX(72deg) rotateY(0deg);
+      animation: rotateInnerGyro 12s linear infinite;
+    }
+
+    .ring-tracker {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .tracker-middle {
+      top: auto;
+      bottom: -10px;
+    }
+
+    .tracker-outer-opposite {
+      top: auto;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .satellite-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      padding: 3px 9px;
+      border-radius: 9999px;
+      background: rgba(7, 59, 76, 0.92);
+      border: 1px solid #2DD4BF;
+      color: #2DD4BF;
+      box-shadow: 0 0 12px rgba(45, 212, 191, 0.45);
+      white-space: nowrap;
+    }
+
+    .satellite-pill.amber {
+      border-color: #F59E0B;
+      color: #FDE047;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+    }
+
+    .satellite-beacon-dot {
+      display: block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2DD4BF;
+      box-shadow: 0 0 10px #2DD4BF;
+    }
+
+    /* Central Floating 3D Fiscal Hologram Core */
+    .holo-central-core {
+      position: absolute;
+      top: 48%;
+      left: 50%;
+      transform: translate(-50%, -50%) translateZ(32px);
+      transform-style: preserve-3d;
+      pointer-events: none;
+    }
+
+    .core-float-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: holoFloatCore 4s ease-in-out infinite alternate;
+    }
+
+    .core-shield-prism {
+      position: relative;
+      width: 76px;
+      height: 76px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(45, 212, 191, 0.3) 0%, rgba(13, 148, 136, 0.6) 50%, rgba(7, 59, 76, 0.85) 100%);
+      border: 2px solid rgba(45, 212, 191, 0.8);
+      box-shadow: 
+        0 0 35px rgba(45, 212, 191, 0.55),
+        0 15px 35px rgba(0, 0, 0, 0.4),
+        inset 0 0 20px rgba(45, 212, 191, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .core-symbol-wrap {
+      font-size: 2.3rem;
+      font-weight: 900;
+      color: #FFFFFF;
+      text-shadow: 
+        0 0 12px rgba(45, 212, 191, 0.95),
+        0 0 25px rgba(45, 212, 191, 0.7);
+      line-height: 1;
+    }
+
+    .core-orbital-halo {
+      position: absolute;
+      inset: -14px;
+      border-radius: 50%;
+      border: 1px dashed rgba(45, 212, 191, 0.4);
+      animation: rotateClock 12s linear infinite;
+    }
+
+    .core-orbital-halo .dot {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #2DD4BF;
+      box-shadow: 0 0 8px #2DD4BF;
+    }
+
+    .core-orbital-halo .d1 { top: -2.5px; left: 50%; transform: translateX(-50%); }
+    .core-orbital-halo .d2 { bottom: -2.5px; left: 50%; transform: translateX(-50%); }
+    .core-orbital-halo .d3 { left: -2.5px; top: 50%; transform: translateY(-50%); }
+    .core-orbital-halo .d4 { right: -2.5px; top: 50%; transform: translateY(-50%); }
+
+    .core-shadow-ground {
+      width: 80px;
+      height: 22px;
+      background: radial-gradient(ellipse, rgba(0, 0, 0, 0.6) 0%, transparent 70%);
+      border-radius: 50%;
+      margin-top: 25px;
+      filter: blur(4px);
+      animation: shadowPulse 4s ease-in-out infinite alternate;
+    }
+
+    /* Dynamic SVG Streams */
+    .holo-svg-streams {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .energy-stream-line {
+      animation: energyDashFlow 2.8s linear infinite;
+    }
+
+    .energy-stream-line.s2 {
+      animation-duration: 3.2s;
+    }
+
+    .energy-stream-line.s3 {
+      animation-duration: 2.5s;
+    }
+
+    /* 3D Glassmorphic HUD Chips */
+    .hud-chip {
+      position: absolute;
+      transform-style: preserve-3d;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .hud-chip:hover {
+      transform: translate3d(var(--tx), var(--ty), calc(var(--tz) + 16px)) scale(1.04) !important;
+      z-index: 10;
+    }
+
+    .hud-chip-inner {
+      background: rgba(7, 59, 76, 0.85);
+      border: 1px solid rgba(45, 212, 191, 0.4);
+      border-radius: 14px;
+      padding: 12px 16px;
+      box-shadow: 
+        0 14px 32px rgba(0, 0, 0, 0.45),
+        0 0 20px rgba(45, 212, 191, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(14px);
+      min-width: 180px;
+    }
+
+    .chip-top-right {
+      --tx: 90px;
+      --ty: -115px;
+      --tz: 55px;
+      transform: translate3d(var(--tx), var(--ty), var(--tz));
+      animation: floatChip1 5s ease-in-out infinite alternate;
+    }
+
+    .chip-bottom-left {
+      --tx: -105px;
+      --ty: 95px;
+      --tz: 65px;
+      transform: translate3d(var(--tx), var(--ty), var(--tz));
+      animation: floatChip2 5.5s ease-in-out infinite alternate;
+    }
+
+    .chip-top-left {
+      --tx: -115px;
+      --ty: -80px;
+      --tz: 40px;
+      transform: translate3d(var(--tx), var(--ty), var(--tz));
+      animation: floatChip3 4.8s ease-in-out infinite alternate;
+    }
+
+    .chip-bottom-ticker {
+      --tx: 0px;
+      --ty: 165px;
+      --tz: 48px;
+      transform: translate3d(var(--tx), var(--ty), var(--tz));
+    }
+
+    .hud-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .hud-category {
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      color: #94A3B8;
+      text-transform: uppercase;
+    }
+
+    .hud-badge-green {
+      margin-left: auto;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #10B981;
+      background: rgba(16, 185, 129, 0.15);
+      padding: 1px 6px;
+      border-radius: 4px;
+      border: 0.5px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .hud-badge-tag {
+      margin-left: auto;
+      font-size: 0.58rem;
+      font-weight: 800;
+      color: #34D399;
+      background: rgba(5, 150, 105, 0.2);
+      padding: 1px 5px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .hud-speed-badge {
+      margin-left: auto;
+      font-size: 0.6rem;
+      font-weight: 800;
+      color: #22D3EE;
+      background: rgba(6, 182, 212, 0.18);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .hud-indicator-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    .pulse-teal {
+      background: #2DD4BF;
+      box-shadow: 0 0 8px #2DD4BF;
+      animation: indicatorBlink 1.8s infinite;
+    }
+
+    .pulse-emerald {
+      background: #10B981;
+      box-shadow: 0 0 8px #10B981;
+      animation: indicatorBlink 2.2s infinite;
+    }
+
+    .hud-value-row {
+      display: flex;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .hud-primary-val {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+
+    .hud-primary-val.text-emerald {
+      color: #34D399;
+    }
+
+    .hud-primary-val.text-cyan {
+      color: #22D3EE;
+    }
+
+    .hud-primary-val small.unit-cr {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #CCFBF1;
+      margin-left: 3px;
+    }
+
+    .hud-sub-desc {
+      font-size: 0.66rem;
+      color: #94A3B8;
+      line-height: 1.35;
+    }
+
+    .hud-sub-tiny {
+      font-size: 0.6rem;
+      color: #64748B;
+      margin-top: 3px;
+    }
+
+    .hud-telemetry-micro-tags {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .micro-tag {
+      font-size: 0.58rem;
+      color: #A7F3D0;
+      background: rgba(16, 185, 129, 0.12);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    .hud-progress-track {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 6px 0 2px;
+    }
+
+    .hud-progress-fill {
+      width: 82%;
+      height: 100%;
+      background: linear-gradient(90deg, #0D9488, #22D3EE);
+      border-radius: 2px;
+      animation: progressPulse 3s ease-in-out infinite alternate;
+    }
+
+    .hud-spark-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 14px;
+      margin-top: 6px;
+    }
+
+    .hud-spark-bars .bar {
+      flex: 1;
+      background: linear-gradient(to top, #0D9488, #2DD4BF);
+      border-radius: 2px 2px 0 0;
+      animation: sparkBarWave 1.4s ease-in-out infinite alternate;
+    }
+
+    .hud-spark-bars .b1 { height: 40%; animation-delay: 0.1s; }
+    .hud-spark-bars .b2 { height: 75%; animation-delay: 0.3s; }
+    .hud-spark-bars .b3 { height: 50%; animation-delay: 0.2s; }
+    .hud-spark-bars .b4 { height: 90%; animation-delay: 0.5s; }
+    .hud-spark-bars .b5 { height: 65%; animation-delay: 0.15s; }
+    .hud-spark-bars .b6 { height: 80%; animation-delay: 0.4s; }
+    .hud-spark-bars .b7 { height: 100%; animation-delay: 0.25s; }
+
+    .chip-bottom-ticker .ticker-content {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(3, 23, 27, 0.88);
+      border: 1px solid rgba(45, 212, 191, 0.35);
+      border-radius: 9999px;
+      padding: 6px 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(45, 212, 191, 0.2);
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+    }
+
+    .ticker-live-icon {
+      color: #2DD4BF;
+      font-size: 0.72rem;
+      animation: indicatorBlink 1.5s infinite;
+    }
+
+    .ticker-text {
+      font-size: 0.66rem;
+      color: #CCFBF1;
+      letter-spacing: 0.02em;
+    }
+
+    .ticker-text strong {
+      color: #FFFFFF;
+      font-weight: 700;
+    }
+
+    /* 3D Keyframe Animations */
+    @keyframes rotateOuterGyro {
+      from { transform: rotateX(66deg) rotateY(16deg) rotateZ(0deg); }
+      to   { transform: rotateX(66deg) rotateY(16deg) rotateZ(360deg); }
+    }
+
+    @keyframes rotateMiddleGyro {
+      from { transform: rotateX(62deg) rotateY(-18deg) rotateZ(360deg); }
+      to   { transform: rotateX(62deg) rotateY(-18deg) rotateZ(0deg); }
+    }
+
+    @keyframes rotateInnerGyro {
+      from { transform: rotateX(72deg) rotateY(0deg) rotateZ(0deg); }
+      to   { transform: rotateX(72deg) rotateY(0deg) rotateZ(360deg); }
+    }
+
+    @keyframes holoFloatCore {
+      0%   { transform: translateY(0px); }
+      100% { transform: translateY(-12px); }
+    }
+
+    @keyframes shadowPulse {
+      0%   { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(0.8); opacity: 0.35; }
+    }
+
+    @keyframes floatChip1 {
+      0%   { transform: translate3d(var(--tx), var(--ty), var(--tz)); }
+      100% { transform: translate3d(var(--tx), calc(var(--ty) - 8px), var(--tz)); }
+    }
+
+    @keyframes floatChip2 {
+      0%   { transform: translate3d(var(--tx), var(--ty), var(--tz)); }
+      100% { transform: translate3d(var(--tx), calc(var(--ty) + 7px), var(--tz)); }
+    }
+
+    @keyframes floatChip3 {
+      0%   { transform: translate3d(var(--tx), var(--ty), var(--tz)); }
+      100% { transform: translate3d(var(--tx), calc(var(--ty) - 6px), var(--tz)); }
+    }
+
+    @keyframes energyDashFlow {
+      0%   { stroke-dashoffset: 48; }
+      100% { stroke-dashoffset: 0; }
+    }
+
+    @keyframes sparkBarWave {
+      0%   { transform: scaleY(0.4); }
+      100% { transform: scaleY(1.1); }
+    }
+
+    @keyframes indicatorBlink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    @keyframes holoGlowAura {
+      0%   { transform: scale(0.9); opacity: 0.5; }
+      100% { transform: scale(1.1); opacity: 0.85; }
+    }
+
+    @keyframes holoBeamFlicker {
+      0%   { opacity: 0.75; }
+      100% { opacity: 0.95; }
+    }
+
+    @keyframes sonarPulse {
+      0%   { transform: scale(0.2); opacity: 0.9; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    @keyframes scanlineScroll {
+      from { background-position: 0 0; }
+      to   { background-position: 0 40px; }
+    }
+
+    @keyframes progressPulse {
+      0%   { opacity: 0.85; }
+      100% { opacity: 1; }
+    }
+
+    /* ══ 4. KEY PRIORITY SECTORS & SCHEME TELEMETRY ══ */
     .key-topics-section {
       padding: 90px 32px;
       max-width: 1400px;
@@ -1515,45 +2526,80 @@ export interface InsightItem {
     .topics-header-row {
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
-      gap: 32px;
+      align-items: flex-start;
+      gap: 48px;
       margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(13, 148, 136, 0.15);
+    }
+
+    .topics-title-col {
+      flex: 0 0 auto;
+      max-width: 480px;
+    }
+
+    .topics-eyebrow {
+      display: inline-block;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #0D9488;
+      text-transform: uppercase;
+      margin-bottom: 8px;
     }
 
     .topics-title {
-      font-size: 2.1rem;
+      font-size: 2.2rem;
       font-weight: 800;
       color: #083E48;
       letter-spacing: -0.02em;
+      line-height: 1.2;
       margin: 0;
     }
 
     .topics-intro-col {
-      max-width: 540px;
+      flex: 1;
+      max-width: 620px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
+      padding-top: 4px;
     }
 
     .topics-intro-text {
-      font-size: 0.94rem;
-      line-height: 1.6;
-      color: #64748B;
+      font-size: 0.98rem;
+      line-height: 1.65;
+      color: #475569;
       margin: 0;
     }
 
-    .topics-view-all {
-      color: #0D9488;
-      font-weight: 700;
-      font-size: 0.88rem;
-      text-decoration: none;
+    .topics-meta-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #0F766E;
+      background: rgba(204, 251, 241, 0.65);
+      border: 1px solid rgba(45, 212, 191, 0.45);
+      padding: 5px 14px;
+      border-radius: 9999px;
+      width: fit-content;
     }
 
-    .topics-view-all:hover {
-      text-decoration: underline;
+    .pulse-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #0D9488;
+      box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7);
+      animation: pulseTeal 1.8s infinite;
+    }
+
+    @keyframes pulseTeal {
+      0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7); }
+      70%  { transform: scale(1); box-shadow: 0 0 0 8px rgba(13, 148, 136, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
     }
 
     .topics-grid {
@@ -1567,24 +2613,27 @@ export interface InsightItem {
       border-radius: 20px;
       overflow: hidden;
       box-shadow: 0 10px 30px rgba(8, 62, 72, 0.06);
-      border: 1px solid rgba(13, 148, 136, 0.15);
+      border: 1px solid rgba(13, 148, 136, 0.18);
       cursor: pointer;
-      text-decoration: none;
-      color: inherit;
       display: flex;
       flex-direction: column;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-style: preserve-3d;
+      perspective: 1200px;
+      will-change: transform, box-shadow;
+      transition: box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+      position: relative;
     }
 
     .topic-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 16px 36px rgba(13, 148, 136, 0.16);
+      box-shadow: 0 22px 45px rgba(13, 148, 136, 0.2), 0 8px 18px rgba(8, 62, 72, 0.08);
       border-color: #0D9488;
     }
 
     .topic-img-frame {
-      height: 220px;
+      height: 200px;
       overflow: hidden;
+      position: relative;
+      transform: translateZ(12px);
     }
 
     .topic-img {
@@ -1598,43 +2647,171 @@ export interface InsightItem {
       transform: scale(1.06);
     }
 
+    .scheme-category-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(8, 62, 72, 0.85);
+      backdrop-filter: blur(8px);
+      color: #5EEAD4;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+      border: 1px solid rgba(45, 212, 191, 0.3);
+    }
+
     .topic-body {
-      padding: 26px;
+      padding: 24px;
       display: flex;
       flex-direction: column;
       flex: 1;
+      transform: translateZ(16px);
+    }
+
+    .topic-ministry-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #0D9488;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
     }
 
     .topic-name {
-      font-size: 1.22rem;
+      font-size: 1.18rem;
       font-weight: 800;
       color: #083E48;
-      margin: 0 0 10px;
+      line-height: 1.35;
+      margin: 0 0 8px;
+      transition: color 0.2s ease;
+    }
+
+    .topic-card:hover .topic-name {
+      color: #0F766E;
     }
 
     .topic-desc {
-      font-size: 0.88rem;
-      line-height: 1.6;
+      font-size: 0.86rem;
+      line-height: 1.55;
       color: #64748B;
-      margin: 0 0 20px;
+      margin: 0 0 16px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
       flex: 1;
     }
 
-    .topic-link {
+    .scheme-mini-metrics {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #F8FAFC;
+      border-radius: 10px;
+      padding: 10px 14px;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      margin-bottom: 10px;
+    }
+
+    .mini-metric-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .mini-label {
+      font-size: 0.66rem;
+      font-weight: 700;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .mini-val {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: #0F172A;
+    }
+
+    .val-teal {
+      color: #0D9488 !important;
+    }
+
+    .scheme-progress-bar-wrap {
+      width: 100%;
+      height: 6px;
+      background: #E2E8F0;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .scheme-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #14B8A6 0%, #0D9488 100%);
+      border-radius: 9999px;
+      transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .pacing-pill {
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+    }
+
+    .pacing-optimal {
+      background: #ECFDF5;
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .pacing-accelerated {
+      background: #EFF6FF;
+      color: #2563EB;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .pacing-review {
+      background: #FFFBEB;
+      color: #D97706;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .topic-footer-row {
+      margin-top: auto;
+    }
+
+    .btn-telemetry-explore {
+      width: 100%;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(240, 253, 250, 0.9);
       color: #0D9488;
-      font-weight: 700;
+      border: 1.5px solid rgba(13, 148, 136, 0.35);
+      border-radius: 12px;
+      padding: 10px 16px;
       font-size: 0.86rem;
-      transition: transform 0.2s;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
     }
 
-    .topic-card:hover .topic-link {
-      transform: translateX(4px);
+    .topic-card:hover .btn-telemetry-explore,
+    .btn-telemetry-explore:hover {
+      background: #0D9488;
+      color: #FFFFFF;
+      border-color: #0D9488;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+      transform: translateY(-2px);
     }
 
-    /* ══ 5. LATEST INSIGHTS & LATEST EVENT ══ */
+    /* ══ 5. LATEST INSIGHTS & LATEST EVENT (3D CARDS) ══ */
     .insights-events-section {
       padding: 90px 32px 110px;
       max-width: 1400px;
@@ -1678,47 +2855,97 @@ export interface InsightItem {
       gap: 20px;
     }
 
-    .insight-card {
+    /* ══ 3D CARD ANIMATIONS & ELEVATION ══ */
+    .insight-card.card-3d,
+    .event-card-container.card-3d {
+      transform-style: preserve-3d;
+      perspective: 1200px;
+      position: relative;
       background: #FFFFFF;
-      border-radius: 16px;
+      transition: box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+      will-change: transform, box-shadow;
+    }
+
+    .insight-card.card-3d::before,
+    .event-card-container.card-3d::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0) 50%, rgba(13, 148, 136, 0.04) 100%);
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .insight-card.card-3d:hover::before,
+    .event-card-container.card-3d:hover::before {
+      opacity: 1;
+    }
+
+    .insight-card {
+      border-radius: 18px;
       overflow: hidden;
-      box-shadow: 0 6px 20px rgba(8, 62, 72, 0.04);
-      border: 1px solid rgba(13, 148, 136, 0.15);
+      box-shadow: 0 8px 24px rgba(8, 62, 72, 0.06);
+      border: 1px solid rgba(13, 148, 136, 0.18);
       cursor: pointer;
       display: flex;
       flex-direction: column;
       text-decoration: none;
       color: inherit;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .insight-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 28px rgba(13, 148, 136, 0.14);
+    .insight-card.card-3d:hover {
+      box-shadow: 0 24px 48px -12px rgba(8, 62, 72, 0.18), 0 12px 24px -8px rgba(13, 148, 136, 0.2);
       border-color: #0D9488;
     }
 
     .insight-thumb-box {
-      height: 160px;
+      height: 165px;
       overflow: hidden;
+      position: relative;
+      transform: translateZ(14px);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .insight-tag-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(8, 62, 72, 0.88);
+      backdrop-filter: blur(6px);
+      color: #5EEAD4;
+      font-size: 0.62rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.06em;
+      border: 1px solid rgba(45, 212, 191, 0.3);
     }
 
     .insight-thumb-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.5s ease;
+      transition: transform 0.6s ease;
     }
 
     .insight-card:hover .insight-thumb-img {
-      transform: scale(1.05);
+      transform: scale(1.08);
+    }
+
+    .insight-card.card-3d:hover .insight-thumb-box {
+      transform: translateZ(22px);
     }
 
     .insight-content {
-      padding: 18px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       flex: 1;
+      transform: translateZ(18px);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .insight-subtag {
@@ -1730,12 +2957,18 @@ export interface InsightItem {
     }
 
     .insight-headline {
-      font-size: 0.96rem;
+      font-size: 0.98rem;
       font-weight: 700;
-      line-height: 1.4;
+      line-height: 1.45;
       color: #0F172A;
       margin: 0 0 12px;
       flex: 1;
+      transition: color 0.2s ease, transform 0.3s ease;
+    }
+
+    .insight-card.card-3d:hover .insight-headline {
+      transform: translateZ(26px);
+      color: #0D9488;
     }
 
     .insight-date {
@@ -1751,15 +2984,20 @@ export interface InsightItem {
       line-height: 1.35;
     }
 
-    /* Right Column: Featured Event Card */
+    /* Right Column: Featured Event Card (3D Animated) */
     .event-card-container {
       background: #FFFFFF;
-      border-radius: 20px;
+      border-radius: 22px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(8, 62, 72, 0.08);
-      border: 1.5px solid rgba(13, 148, 136, 0.2);
+      box-shadow: 0 12px 32px rgba(8, 62, 72, 0.09);
+      border: 1.5px solid rgba(13, 148, 136, 0.22);
       display: flex;
       flex-direction: column;
+    }
+
+    .event-card-container.card-3d:hover {
+      box-shadow: 0 26px 54px -14px rgba(8, 62, 72, 0.22), 0 14px 28px -8px rgba(13, 148, 136, 0.24);
+      border-color: #0D9488;
     }
 
     .event-kicker {
@@ -1768,22 +3006,34 @@ export interface InsightItem {
       letter-spacing: 0.08em;
       color: #0D9488;
       text-transform: uppercase;
-      padding: 14px 20px;
-      background: rgba(240, 253, 250, 0.8);
+      padding: 14px 22px;
+      background: rgba(240, 253, 250, 0.85);
       border-bottom: 1px solid rgba(13, 148, 136, 0.15);
       display: block;
+      transform: translateZ(10px);
     }
 
     .event-poster-wrap {
-      height: 190px;
+      height: 200px;
       position: relative;
       overflow: hidden;
+      transform: translateZ(14px);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .event-card-container.card-3d:hover .event-poster-wrap {
+      transform: translateZ(24px);
     }
 
     .event-poster-img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+
+    .event-card-container:hover .event-poster-img {
+      transform: scale(1.05);
     }
 
     .event-poster-overlay {
@@ -1793,7 +3043,7 @@ export interface InsightItem {
     }
 
     .event-mode-badge {
-      background: rgba(8, 62, 72, 0.85);
+      background: rgba(8, 62, 72, 0.88);
       backdrop-filter: blur(8px);
       color: #FFFFFF;
       font-size: 0.7rem;
@@ -1804,18 +3054,25 @@ export interface InsightItem {
     }
 
     .event-details-body {
-      padding: 22px;
+      padding: 24px;
       display: flex;
       flex-direction: column;
       gap: 14px;
+      transform: translateZ(18px);
     }
 
     .event-main-title {
-      font-size: 1.15rem;
+      font-size: 1.18rem;
       font-weight: 800;
       line-height: 1.35;
       color: #083E48;
       margin: 0;
+      transition: color 0.2s ease, transform 0.3s ease;
+    }
+
+    .event-card-container.card-3d:hover .event-main-title {
+      color: #0F766E;
+      transform: translateZ(28px);
     }
 
     .event-time-block {
@@ -1860,12 +3117,13 @@ export interface InsightItem {
       border: none;
       cursor: pointer;
       box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3);
-      transition: all 0.2s ease;
+      transition: all 0.25s ease;
+      transform: translateZ(24px);
     }
 
-    .btn-register-event:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(13, 148, 136, 0.4);
+    .event-card-container.card-3d:hover .btn-register-event {
+      transform: translateZ(32px) translateY(-2px);
+      box-shadow: 0 8px 22px rgba(13, 148, 136, 0.45);
     }
 
     .event-view-all-row {
@@ -1885,6 +3143,600 @@ export interface InsightItem {
 
     .event-view-all-link:hover {
       text-decoration: underline;
+    }
+
+    /* ══ SCHEME TELEMETRY MODAL ══ */
+    .scheme-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 30, 36, 0.8);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .scheme-modal-glass {
+      background: #FFFFFF;
+      border: 1px solid rgba(13, 148, 136, 0.3);
+      border-radius: 24px;
+      max-width: 960px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlideUp {
+      from { opacity: 0; transform: translateY(24px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .scheme-modal-header {
+      padding: 24px 28px;
+      background: linear-gradient(135deg, #083E48 0%, #0A4F5C 100%);
+      color: #FFFFFF;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .scheme-code-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #5EEAD4;
+      background: rgba(13, 148, 136, 0.35);
+      border: 1px solid rgba(45, 212, 191, 0.4);
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .scheme-modal-title {
+      font-size: 1.55rem;
+      font-weight: 800;
+      margin: 0 0 8px;
+      line-height: 1.25;
+      color: #FFFFFF;
+    }
+
+    .scheme-header-sub {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: #CCFBF1;
+    }
+
+    .scheme-meta-sep {
+      opacity: 0.6;
+    }
+
+    .tag-sponsored {
+      background: rgba(45, 212, 191, 0.25);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .scheme-modal-close {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .scheme-modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.08);
+    }
+
+    .scheme-kpi-banner {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      padding: 20px 28px;
+      background: #F8FAFC;
+      border-bottom: 1px solid #E2E8F0;
+    }
+
+    .kpi-banner-card {
+      background: #FFFFFF;
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid rgba(13, 148, 136, 0.15);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    .kpi-banner-label {
+      font-size: 0.66rem;
+      font-weight: 800;
+      color: #64748B;
+      letter-spacing: 0.06em;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .kpi-banner-value {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #0F172A;
+      line-height: 1.2;
+    }
+
+    .val-emerald {
+      color: #059669 !important;
+    }
+
+    .kpi-banner-sub {
+      font-size: 0.72rem;
+      color: #64748B;
+      margin-top: 4px;
+      display: block;
+    }
+
+    .scheme-tabs-nav {
+      display: flex;
+      border-bottom: 1px solid #E2E8F0;
+      background: #FFFFFF;
+      padding: 0 28px;
+      gap: 8px;
+      overflow-x: auto;
+    }
+
+    .scheme-tab-btn {
+      padding: 14px 18px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #64748B;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .scheme-tab-btn:hover {
+      color: #0D9488;
+    }
+
+    .scheme-tab-btn.active {
+      color: #0D9488;
+      border-bottom-color: #0D9488;
+      background: rgba(240, 253, 250, 0.6);
+    }
+
+    .scheme-modal-body {
+      padding: 24px 28px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .pane-headline {
+      margin-bottom: 20px;
+    }
+
+    .pane-headline h3 {
+      font-size: 1.12rem;
+      font-weight: 800;
+      color: #083E48;
+      margin: 0 0 4px;
+    }
+
+    .pane-headline p {
+      font-size: 0.85rem;
+      color: #64748B;
+      margin: 0;
+    }
+
+    .physical-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .kpi-detail-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 16px 18px;
+    }
+
+    .kpi-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .kpi-icon {
+      font-size: 1.4rem;
+    }
+
+    .kpi-completion-badge {
+      font-size: 0.76rem;
+      font-weight: 800;
+      color: #0D9488;
+      background: rgba(204, 251, 241, 0.8);
+      padding: 3px 8px;
+      border-radius: 9999px;
+    }
+
+    .kpi-label {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #1E293B;
+      margin: 0 0 6px;
+    }
+
+    .kpi-numbers {
+      font-size: 0.82rem;
+      color: #64748B;
+      margin-bottom: 10px;
+    }
+
+    .kpi-numbers strong {
+      font-size: 1.05rem;
+      color: #0F172A;
+      margin-right: 4px;
+    }
+
+    .kpi-bar-track {
+      height: 7px;
+      background: #E2E8F0;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .kpi-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #14B8A6, #0D9488);
+      border-radius: 9999px;
+    }
+
+    /* Tab 2: Pacing */
+    .pacing-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .pacing-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pacing-quarter-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #0D9488;
+      background: rgba(13, 148, 136, 0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+
+    .stat-amt {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0F172A;
+    }
+
+    .stat-sub {
+      font-size: 0.7rem;
+      color: #64748B;
+    }
+
+    .pacing-comparison {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.76rem;
+      border-top: 1px dashed #CBD5E1;
+      padding-top: 6px;
+    }
+
+    .pacing-double-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #64748B;
+    }
+
+    .bar-lbl {
+      width: 20px;
+    }
+
+    .bar-row .track {
+      flex: 1;
+      height: 6px;
+      background: #E2E8F0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .fill-act {
+      height: 100%;
+      background: #0D9488;
+      border-radius: 4px;
+    }
+
+    .fill-tgt {
+      height: 100%;
+      background: #94A3B8;
+      border-radius: 4px;
+    }
+
+    /* Tab 3: States */
+    .states-comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .state-group-box {
+      border-radius: 16px;
+      padding: 18px;
+      border: 1px solid;
+    }
+
+    .top-group {
+      background: #F0FDF4;
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .lag-group {
+      background: #FFFBEB;
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .group-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .group-title-row h4 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 0;
+    }
+
+    .state-rows-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .state-row-item {
+      display: flex;
+      align-items: center;
+      background: #FFFFFF;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 0.84rem;
+    }
+
+    .st-rank {
+      font-weight: 800;
+      color: #059669;
+      width: 28px;
+    }
+
+    .st-rank-lag {
+      font-weight: 800;
+      color: #D97706;
+      width: 28px;
+    }
+
+    .st-name {
+      flex: 1;
+      font-weight: 700;
+      color: #1E293B;
+    }
+
+    .st-expenditure {
+      color: #64748B;
+      font-size: 0.8rem;
+      margin-right: 12px;
+    }
+
+    .st-rate-badge {
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+    }
+
+    .badge-green {
+      background: #DCFCE7;
+      color: #15803D;
+    }
+
+    .badge-amber {
+      background: #FEF3C7;
+      color: #B45309;
+    }
+
+    /* Tab 4: Alerts */
+    .telemetry-alerts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .alert-item-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid;
+    }
+
+    .status-success {
+      background: #F0FDF4;
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .status-warning {
+      background: #FFFBEB;
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .status-info {
+      background: #F0FDFA;
+      border-color: rgba(13, 148, 136, 0.3);
+    }
+
+    .alert-body-col {
+      flex: 1;
+    }
+
+    .alert-title {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 2px;
+    }
+
+    .alert-detail {
+      font-size: 0.82rem;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    .alert-badge {
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    .tracking-architecture-box {
+      background: #F8FAFC;
+      border: 1px dashed #CBD5E1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+    }
+
+    .arch-label {
+      font-weight: 700;
+      color: #475569;
+    }
+
+    .tracking-architecture-box code {
+      color: #0D9488;
+      font-weight: 700;
+      background: #FFFFFF;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid #E2E8F0;
+    }
+
+    /* Modal Footer */
+    .scheme-modal-footer {
+      padding: 16px 28px;
+      background: #F8FAFC;
+      border-top: 1px solid #E2E8F0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .footer-left-info {
+      font-size: 0.74rem;
+      color: #64748B;
+    }
+
+    .footer-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-modal-ghost {
+      padding: 9px 18px;
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      color: #475569;
+      font-weight: 700;
+      font-size: 0.84rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-modal-ghost:hover {
+      background: #F1F5F9;
+      color: #0F172A;
+    }
+
+    .btn-modal-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 20px;
+      background: #0D9488;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 0.84rem;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-modal-action:hover {
+      background: #0F766E;
+      transform: translateY(-1px);
     }
 
     /* ══ 6. COMPACT REGISTRATION MODAL (FITS COMFORTABLY WITHOUT SCROLL) ══ */
@@ -2226,7 +4078,8 @@ export interface InsightItem {
       .photo-top { height: 260px; }
       .obs-header-row { grid-template-columns: 1fr; gap: 20px; }
       .featured-resource-card { grid-template-columns: 1fr; padding: 32px; gap: 28px; }
-      .resource-graphic-col { display: flex; justify-content: center; }
+      .resource-graphic-col { display: flex; justify-content: center; min-height: 400px; }
+      .hologram-telemetry-stage { transform: scale(0.92); margin: 0 auto; }
       .topics-grid { grid-template-columns: 1fr 1fr; }
       .insights-events-wrap { grid-template-columns: 1fr; }
       .insights-cards-row { grid-template-columns: 1fr 1fr; }
@@ -2254,8 +4107,10 @@ export interface InsightItem {
       .featured-resource-card { padding: 22px 18px; }
       .resource-card-title { font-size: 1.35rem; }
       .resource-stats-strip { grid-template-columns: 1fr; gap: 10px; }
+      .resource-graphic-col { min-height: 360px; }
+      .hologram-telemetry-stage { transform: scale(0.76); height: 360px; margin: 0 auto; }
       .key-topics-section { padding: 60px 16px; }
-      .topics-header-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .topics-header-row { flex-direction: column; align-items: flex-start; gap: 14px; }
       .topics-title { font-size: 1.65rem; }
       .topics-grid { grid-template-columns: 1fr; gap: 20px; }
       .insights-events-section { padding: 60px 16px 80px; }
@@ -2263,14 +4118,36 @@ export interface InsightItem {
       .form-row { grid-template-columns: 1fr; gap: 10px; }
       .radio-pill-group { flex-direction: column; }
       .modal-dialog-glass { padding: 20px 16px; }
+
+      /* Scheme Telemetry Modal Mobile */
+      .scheme-modal-glass { max-height: 94vh; border-radius: 18px; }
+      .scheme-modal-header { padding: 18px 20px; }
+      .scheme-modal-title { font-size: 1.25rem; }
+      .scheme-kpi-banner { grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 16px; }
+      .scheme-tabs-nav { padding: 0 16px; }
+      .scheme-tab-btn { padding: 12px 14px; font-size: 0.8rem; }
+      .scheme-modal-body { padding: 18px 16px; }
+      .physical-kpi-grid { grid-template-columns: 1fr; gap: 12px; }
+      .pacing-cards-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .states-comparison-grid { grid-template-columns: 1fr; gap: 14px; }
+      .scheme-modal-footer { flex-direction: column; align-items: stretch; gap: 10px; padding: 14px 16px; }
+      .footer-btn-group { justify-content: flex-end; }
+    }
+
+    @media (max-width: 480px) {
+      .resource-graphic-col { min-height: 310px; }
+      .hologram-telemetry-stage { transform: scale(0.64); height: 310px; }
     }
   `]
 })
 export class HomeComponent implements OnInit, OnDestroy {
-  currentSlideIndex = 2; // Starts with the center slide (Slide 3 of 5)
+  // 15 virtual slides (3 sets of 5 slides)
+  // Base set is indices 5 to 9. Center slide (Slide 3) is at index 5 + 2 = 7.
+  currentVirtualIndex = 7;
+  isTransitionDisabled = false;
   private autoSlideTimer: any = null;
 
-  // 100% India-Centric Carousel Slides (5 Total, Starts Centered)
+  // 100% India-Centric Carousel Slides (5 Flagship Events)
   carouselSlides: EventItem[] = [
     {
       id: 'slide-1',
@@ -2334,6 +4211,286 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   ];
 
+  get displaySlides(): EventItem[] {
+    return [...this.carouselSlides, ...this.carouselSlides, ...this.carouselSlides];
+  }
+
+  // ════ 6 PRIORITY SCHEMES (RESEARCH-BACKED TELEMETRY) ════
+  prioritySchemes: SchemeTelemetry[] = [
+    {
+      id: 'scheme-nhm',
+      code: 'GOI-SCH-NHM-2026',
+      name: 'Primary & Maternal Healthcare (NHM & PM-ABHIM)',
+      shortName: 'National Health Mission',
+      ministry: 'Ministry of Health and Family Welfare (MoHFW)',
+      implementingAgency: 'National Health Authority (NHA) & State Health Societies',
+      category: 'Centrally Sponsored Scheme (CSS)',
+      imageUrl: '/assets/healthcare-nhm.jpg',
+      description: 'Transforming primary healthcare infrastructure, Janani Suraksha maternal health support, free diagnostic tests, and operationalizing 1.73 Lakh Ayushman Arogya Mandirs across India.',
+      fyAllocation: '₹38,189 Cr',
+      fyAllocationPrev: '₹36,785 Cr',
+      expenditureToDate: '₹32,995 Cr',
+      utilizationRate: 86.4,
+      velocityStatus: 'Optimal',
+      fundSharingRatio: '60:40 (General States), 90:10 (NE/Himalayan)',
+      physicalKPIs: [
+        { label: 'Ayushman Arogya Mandirs Operationalized', achieved: '1,73,500', target: '1,75,000', unit: 'centres', percentage: 99.1, icon: '🏥' },
+        { label: 'Maternal Mortality Ratio (MMR Reduction)', achieved: '97', target: '70', unit: 'per 100k births', percentage: 85.2, icon: '🤱' },
+        { label: 'Real-Time DVDMS Drug Inventory Online', achieved: '94.8%', target: '100%', unit: 'PHC saturation', percentage: 94.8, icon: '💊' },
+        { label: 'eSanjeevani Tele-consultations Logged', achieved: '28.4 Cr', target: '30 Cr', unit: 'consultations', percentage: 94.7, icon: '📱' }
+      ],
+      quarterlyPacing: [
+        { quarter: 'Q1 (Apr - Jun)', targetPct: 22, actualPct: 22.8, amountCr: '₹8,707 Cr' },
+        { quarter: 'Q2 (Jul - Sep)', targetPct: 48, actualPct: 47.5, amountCr: '₹18,140 Cr' },
+        { quarter: 'Q3 (Oct - Dec)', targetPct: 70, actualPct: 71.2, amountCr: '₹27,190 Cr' },
+        { quarter: 'Q4 (Projected)', targetPct: 92, actualPct: 86.4, amountCr: '₹32,995 Cr' }
+      ],
+      topStates: [
+        { name: 'Tamil Nadu', rate: 94.2, expenditureCr: '₹3,120 Cr' },
+        { name: 'Kerala', rate: 92.8, expenditureCr: '₹1,840 Cr' },
+        { name: 'Gujarat', rate: 90.5, expenditureCr: '₹2,680 Cr' }
+      ],
+      laggingStates: [
+        { name: 'Bihar', rate: 69.4, expenditureCr: '₹2,910 Cr' },
+        { name: 'Jharkhand', rate: 71.2, expenditureCr: '₹1,180 Cr' },
+        { name: 'Nagaland', rate: 68.1, expenditureCr: '₹340 Cr' }
+      ],
+      telemetryHighlights: [
+        { title: 'SNA-SPARROW Integration Active', status: 'success', detail: '99.4% State Health Society bank accounts mapped to zero-balance Single Nodal Accounts with automated sweep.' },
+        { title: 'Aspirational District Drug Supply Alert', status: 'info', detail: 'Real-time telemetry verified zero stock-outs of essential antibiotics across 72 aspirational district hospitals.' },
+        { title: 'Q4 Expenditure Surge Watchlist', status: 'warning', detail: '3 northeastern state treasuries flagged for delayed Q3 bill submissions; automated advance release paused until reconciliation.' }
+      ],
+      trackingSystem: 'PFMS Single Nodal Agency (SNA) + SPARROW + DVDMS Drug Logistics'
+    },
+    {
+      id: 'scheme-jjm',
+      code: 'GOI-SCH-JJM-2026',
+      name: 'Drinking Water Grid (Jal Jeevan Mission - Har Ghar Jal)',
+      shortName: 'Jal Jeevan Mission',
+      ministry: 'Ministry of Jal Shakti',
+      implementingAgency: 'National Jal Jeevan Mission (NJJM) & State Water & Sanitation Missions',
+      category: 'Centrally Sponsored Scheme (CSS)',
+      imageUrl: '/assets/jal-jeevan-water.jpg',
+      description: 'Algorithmic expenditure tracking delivering potable tap water supply to 15.3+ Crore rural households, supported by IoT-based water quantity & quality sensors across 6 lakh villages.',
+      fyAllocation: '₹70,163 Cr',
+      fyAllocationPrev: '₹69,926 Cr',
+      expenditureToDate: '₹58,024 Cr',
+      utilizationRate: 82.7,
+      velocityStatus: 'Optimal',
+      fundSharingRatio: '50:50 (General States), 90:10 (NE/Himalayan), 100% (UTs)',
+      physicalKPIs: [
+        { label: 'Functional Household Tap Connections (FHTC)', achieved: '15.34 Cr', target: '19.32 Cr', unit: 'households', percentage: 79.4, icon: '🚰' },
+        { label: 'Har Ghar Jal Certified Gram Panchayats', achieved: '2,14,000', target: '2,40,000', unit: 'villages', percentage: 89.2, icon: '🏡' },
+        { label: 'IoT Sensor Telemetry Real-Time Grids', achieved: '2,180', target: '2,500', unit: 'grids', percentage: 87.2, icon: '📡' },
+        { label: 'Schools & Anganwadi Tap Water Coverage', achieved: '9.28 Lakh', target: '9.80 Lakh', unit: 'institutions', percentage: 94.7, icon: '🏫' }
+      ],
+      quarterlyPacing: [
+        { quarter: 'Q1 (Apr - Jun)', targetPct: 20, actualPct: 18.5, amountCr: '₹12,980 Cr' },
+        { quarter: 'Q2 (Jul - Sep)', targetPct: 45, actualPct: 41.2, amountCr: '₹28,907 Cr' },
+        { quarter: 'Q3 (Oct - Dec)', targetPct: 70, actualPct: 66.8, amountCr: '₹46,868 Cr' },
+        { quarter: 'Q4 (Projected)', targetPct: 90, actualPct: 82.7, amountCr: '₹58,024 Cr' }
+      ],
+      topStates: [
+        { name: 'Goa & Telangana', rate: 100, expenditureCr: '₹1,450 Cr' },
+        { name: 'Gujarat', rate: 99.8, expenditureCr: '₹4,820 Cr' },
+        { name: 'Haryana', rate: 100, expenditureCr: '₹2,180 Cr' }
+      ],
+      laggingStates: [
+        { name: 'West Bengal', rate: 52.6, expenditureCr: '₹3,840 Cr' },
+        { name: 'Rajasthan', rate: 55.4, expenditureCr: '₹4,120 Cr' },
+        { name: 'Jharkhand', rate: 53.1, expenditureCr: '₹1,950 Cr' }
+      ],
+      telemetryHighlights: [
+        { title: 'Automated SNA Release Mechanism', status: 'success', detail: 'Real-time validation against previous tranche expenditure vouchers before triggering RBI e-Kuber central grant releases.' },
+        { title: 'Water Quality Telemetry Feed', status: 'info', detail: '98.6% compliance on residual chlorine and bacteriological purity in 2,180 continuous telemetry pilot villages.' },
+        { title: 'Unspent State Balance Parking Flag', status: 'warning', detail: '₹4,120 Cr unspent central funds identified across 4 state water mission accounts; state treasuries served reminder.' }
+      ],
+      trackingSystem: 'JJM Integrated Telemetry Platform + PFMS SNA Dashboard + IoT Sensor Grid'
+    },
+    {
+      id: 'scheme-pmgsy',
+      code: 'GOI-SCH-PMGSY-2026',
+      name: 'DBT & Rural Connectivity (PMGSY - Phase III & IV)',
+      shortName: 'PM Gram Sadak Yojana',
+      ministry: 'Ministry of Rural Development (MoRD)',
+      implementingAgency: 'National Rural Infrastructure Development Agency (NRIDA)',
+      category: 'Centrally Sponsored Scheme (CSS)',
+      imageUrl: '/assets/pmgsy-roads.jpg',
+      description: 'All-weather rural road construction linking 1.62 lakh habitations and modernizing 1,25,000 km of rural agricultural market access routes with GIS geo-tagged telemetry.',
+      fyAllocation: '₹19,000 Cr',
+      fyAllocationPrev: '₹17,000 Cr',
+      expenditureToDate: '₹16,948 Cr',
+      utilizationRate: 89.2,
+      velocityStatus: 'Optimal',
+      fundSharingRatio: '60:40 (General States), 90:10 (NE/Himalayan)',
+      physicalKPIs: [
+        { label: 'Eligible Habitations Fully Connected', achieved: '1,62,400', target: '1,64,000', unit: 'habitations', percentage: 99.0, icon: '🛣️' },
+        { label: 'Total Rural Road Length Constructed', achieved: '7,52,400', target: '7,80,000', unit: 'km', percentage: 96.5, icon: '🚜' },
+        { label: 'Green Technology Roads (Cold Mix/Plastic)', achieved: '78,500', target: '60,000', unit: 'km', percentage: 130.8, icon: '🌱' },
+        { label: 'GIS Geo-referenced Network Mappings', achieved: '99.8%', target: '100%', unit: 'verification', percentage: 99.8, icon: '📍' }
+      ],
+      quarterlyPacing: [
+        { quarter: 'Q1 (Apr - Jun)', targetPct: 22, actualPct: 24.1, amountCr: '₹4,579 Cr' },
+        { quarter: 'Q2 (Jul - Sep)', targetPct: 48, actualPct: 51.3, amountCr: '₹9,747 Cr' },
+        { quarter: 'Q3 (Oct - Dec)', targetPct: 72, actualPct: 74.6, amountCr: '₹14,174 Cr' },
+        { quarter: 'Q4 (Projected)', targetPct: 94, actualPct: 89.2, amountCr: '₹16,948 Cr' }
+      ],
+      topStates: [
+        { name: 'Madhya Pradesh', rate: 95.1, expenditureCr: '₹2,480 Cr' },
+        { name: 'Maharashtra', rate: 93.4, expenditureCr: '₹1,920 Cr' },
+        { name: 'Uttar Pradesh', rate: 91.8, expenditureCr: '₹3,150 Cr' }
+      ],
+      laggingStates: [
+        { name: 'Manipur', rate: 62.3, expenditureCr: '₹310 Cr' },
+        { name: 'Meghalaya', rate: 66.5, expenditureCr: '₹290 Cr' },
+        { name: 'Jammu & Kashmir', rate: 74.2, expenditureCr: '₹840 Cr' }
+      ],
+      telemetryHighlights: [
+        { title: 'OMMAS-PFMS Electronic Reconciliation', status: 'success', detail: '100% contractor milestones authenticated through mobile GIS before release of e-payment vouchers via PFMS.' },
+        { title: 'Meri Sadak Citizen Feedback Loop', status: 'info', detail: '96.2% citizen maintenance requests verified and rectified within 30-day statutory SLA across all states.' },
+        { title: 'Terrain Delay Anomaly', status: 'warning', detail: 'Monsoon landslide recovery in 6 Himalayan hill districts experiencing 45-day contractor completion extensions.' }
+      ],
+      trackingSystem: 'Online Management, Monitoring and Accounting System (OMMAS) + PFMS e-Payment'
+    },
+    {
+      id: 'scheme-pmkisan',
+      code: 'GOI-SCH-KISAN-2026',
+      name: 'Direct Farmer Income Support (PM-KISAN)',
+      shortName: 'PM-KISAN',
+      ministry: 'Ministry of Agriculture & Farmers Welfare',
+      implementingAgency: 'PM-KISAN Central Project Management Unit & State Agriculture Depts',
+      category: 'Central Sector Scheme (100% Central Funding)',
+      imageUrl: '/assets/dbt-transfer.jpg',
+      description: 'Direct income support of ₹6,000/year in 3 equal tranches to 11.2 Crore landholder farmer families across India via Aadhaar Payment Bridge System (APBS) with zero intermediaries.',
+      fyAllocation: '₹60,000 Cr',
+      fyAllocationPrev: '₹60,000 Cr',
+      expenditureToDate: '₹58,860 Cr',
+      utilizationRate: 98.1,
+      velocityStatus: 'Accelerated',
+      fundSharingRatio: '100% Central Sector (Zero State Contribution Required)',
+      physicalKPIs: [
+        { label: 'Active Beneficiary Farmer Families', achieved: '11.2 Cr', target: '11.5 Cr', unit: 'families', percentage: 97.4, icon: '🌾' },
+        { label: 'Direct Aadhaar Bank Payout Success Rate', achieved: '99.8%', target: '100%', unit: 'transfers', percentage: 99.8, icon: '💳' },
+        { label: 'Land Records & e-KYC Biometric Seeding', achieved: '99.1%', target: '100%', unit: 'verified', percentage: 99.1, icon: '📑' },
+        { label: 'Cumulative Payout Since Launch', achieved: '₹3.24L Cr', target: '₹3.30L Cr', unit: 'disbursed', percentage: 98.2, icon: '💰' }
+      ],
+      quarterlyPacing: [
+        { quarter: 'Tranche 1 (Apr - Jul)', targetPct: 33.3, actualPct: 33.1, amountCr: '₹19,860 Cr' },
+        { quarter: 'Tranche 2 (Aug - Nov)', targetPct: 66.6, actualPct: 66.2, amountCr: '₹39,720 Cr' },
+        { quarter: 'Tranche 3 (Dec - Mar)', targetPct: 100, actualPct: 98.1, amountCr: '₹58,860 Cr' }
+      ],
+      topStates: [
+        { name: 'Uttar Pradesh', rate: 99.4, expenditureCr: '₹14,100 Cr' },
+        { name: 'Madhya Pradesh', rate: 98.9, expenditureCr: '₹6,280 Cr' },
+        { name: 'Maharashtra', rate: 98.6, expenditureCr: '₹7,140 Cr' }
+      ],
+      laggingStates: [
+        { name: 'West Bengal', rate: 91.2, expenditureCr: '₹3,450 Cr' },
+        { name: 'Nagaland', rate: 92.4, expenditureCr: '₹180 Cr' }
+      ],
+      telemetryHighlights: [
+        { title: 'Zero Ghost Account Disbursals', status: 'success', detail: 'Automated exclusion engine cross-checks income tax databases, institutional landholders, and Aadhaar death registers.' },
+        { title: 'Sub-second NPCI Gateway Latency', status: 'info', detail: 'PFMS to NPCI payment instruction turnaround averaged 84ms across the 18th nationwide installment cycle.' },
+        { title: 'Bank Account Invalidation Sweep', status: 'info', detail: '0.12% return transfers immediately routed for beneficiary SMS notification and district CSC re-validation.' }
+      ],
+      trackingSystem: 'PM-KISAN National Portal + PFMS APBS Gateway + NPCI Aadhaar Bridge'
+    },
+    {
+      id: 'scheme-samagra',
+      code: 'GOI-SCH-EDU-2026',
+      name: 'Quality Education & PM-SHRI Exemplar Schools',
+      shortName: 'Samagra Shiksha',
+      ministry: 'Ministry of Education (MoE)',
+      implementingAgency: 'Department of School Education & Literacy & State Implementation Societies',
+      category: 'Centrally Sponsored Scheme (CSS)',
+      imageUrl: '/assets/pfms-ai-data.jpg',
+      description: 'Holistic pre-school to class 12 educational funding, upgrading 14,500 schools into PM-SHRI model institutions with smart STEM labs, DIKSHA digital content, and inclusive classrooms.',
+      fyAllocation: '₹43,550 Cr',
+      fyAllocationPrev: '₹37,500 Cr',
+      expenditureToDate: '₹37,100 Cr',
+      utilizationRate: 85.3,
+      velocityStatus: 'Optimal',
+      fundSharingRatio: '60:40 (General States), 90:10 (NE/Himalayan), 100% (UTs)',
+      physicalKPIs: [
+        { label: 'PM-SHRI Model Schools Approved', achieved: '14,500', target: '14,500', unit: 'schools', percentage: 100.0, icon: '🏫' },
+        { label: 'Elementary Gross Enrollment Retention', achieved: '98.4%', target: '100%', unit: 'retention', percentage: 98.4, icon: '📚' },
+        { label: 'DIKSHA Digital Interactive Learning Usage', achieved: '5.2B', target: '5.0B', unit: 'sessions', percentage: 104.0, icon: '💻' },
+        { label: 'CWSN Inclusive Education Grants', achieved: '24.8 Lakh', target: '26.0 Lakh', unit: 'students', percentage: 95.4, icon: '🤝' }
+      ],
+      quarterlyPacing: [
+        { quarter: 'Q1 (Apr - Jun)', targetPct: 22, actualPct: 21.4, amountCr: '₹9,320 Cr' },
+        { quarter: 'Q2 (Jul - Sep)', targetPct: 48, actualPct: 46.2, amountCr: '₹20,120 Cr' },
+        { quarter: 'Q3 (Oct - Dec)', targetPct: 70, actualPct: 69.8, amountCr: '₹30,400 Cr' },
+        { quarter: 'Q4 (Projected)', targetPct: 91, actualPct: 85.3, amountCr: '₹37,100 Cr' }
+      ],
+      topStates: [
+        { name: 'Gujarat', rate: 93.1, expenditureCr: '₹2,840 Cr' },
+        { name: 'Himachal Pradesh', rate: 91.8, expenditureCr: '₹920 Cr' },
+        { name: 'Punjab', rate: 90.4, expenditureCr: '₹1,480 Cr' }
+      ],
+      laggingStates: [
+        { name: 'Bihar', rate: 70.2, expenditureCr: '₹3,450 Cr' },
+        { name: 'Assam', rate: 73.5, expenditureCr: '₹1,260 Cr' },
+        { name: 'Odisha', rate: 76.1, expenditureCr: '₹1,640 Cr' }
+      ],
+      telemetryHighlights: [
+        { title: 'Vidya Samiksha Kendra (VSK) Sync', status: 'success', detail: 'Real-time teacher attendance, student learning outcomes, and infrastructural readiness mapped in 24 states.' },
+        { title: 'ICT Lab Procurement Clearance', status: 'info', detail: '100% hardware procurement for PM-SHRI labs transacted via GeM (Government e-Marketplace) with PFMS billing.' },
+        { title: 'Teacher Salary Grant Tranche Gap', status: 'warning', detail: '2 eastern states exhibited 3-week delays in transferring central matching grants from consolidated fund to SIS.' }
+      ],
+      trackingSystem: 'Unified District Information System for Education (UDISE+) + Vidya Samiksha Kendra + PFMS'
+    },
+    {
+      id: 'scheme-pmay',
+      code: 'GOI-SCH-PMAY-2026',
+      name: 'Affordable Housing for All (PMAY Gramin & Urban)',
+      shortName: 'PM Awas Yojana',
+      ministry: 'Ministry of Rural Development & Ministry of Housing and Urban Affairs',
+      implementingAgency: 'State Rural Development & Housing Boards',
+      category: 'Centrally Sponsored Scheme (CSS)',
+      imageUrl: '/assets/state-capex-infra.jpg',
+      description: 'Ensuring pucca houses with clean cooking fuel, electricity, and tap water for 3.42+ Crore poor families through milestone-based geo-tagged direct benefit disbursements.',
+      fyAllocation: '₹54,500 Cr',
+      fyAllocationPrev: '₹54,103 Cr',
+      expenditureToDate: '₹49,867 Cr',
+      utilizationRate: 91.5,
+      velocityStatus: 'Accelerated',
+      fundSharingRatio: '60:40 (General States), 90:10 (NE/Himalayan)',
+      physicalKPIs: [
+        { label: 'Pucca Houses Constructed & Handed Over', achieved: '3.42 Cr', target: '3.50 Cr', unit: 'houses', percentage: 97.7, icon: '🏠' },
+        { label: 'Basic Amenities Convergence Saturation', achieved: '100%', target: '100%', unit: 'LPG+Power+Tap', percentage: 100.0, icon: '💡' },
+        { label: 'Geo-tagged Milestone Inspections', achieved: '13.6 Cr', target: '14.0 Cr', unit: 'photos', percentage: 97.1, icon: '📸' },
+        { label: 'Women Head of Household Sole/Joint Titles', achieved: '74.2%', target: '75.0%', unit: 'registered', percentage: 98.9, icon: '👩' }
+      ],
+      quarterlyPacing: [
+        { quarter: 'Q1 (Apr - Jun)', targetPct: 22, actualPct: 24.5, amountCr: '₹13,352 Cr' },
+        { quarter: 'Q2 (Jul - Sep)', targetPct: 48, actualPct: 50.8, amountCr: '₹27,686 Cr' },
+        { quarter: 'Q3 (Oct - Dec)', targetPct: 72, actualPct: 73.9, amountCr: '₹40,275 Cr' },
+        { quarter: 'Q4 (Projected)', targetPct: 95, actualPct: 91.5, amountCr: '₹49,867 Cr' }
+      ],
+      topStates: [
+        { name: 'Odisha', rate: 96.4, expenditureCr: '₹4,890 Cr' },
+        { name: 'Madhya Pradesh', rate: 95.8, expenditureCr: '₹5,720 Cr' },
+        { name: 'Rajasthan', rate: 94.2, expenditureCr: '₹4,310 Cr' }
+      ],
+      laggingStates: [
+        { name: 'West Bengal', rate: 71.8, expenditureCr: '₹3,920 Cr' },
+        { name: 'Nagaland', rate: 73.2, expenditureCr: '₹280 Cr' }
+      ],
+      telemetryHighlights: [
+        { title: 'AwaasApp 4-Stage Photo Verification', status: 'success', detail: 'Plinth, lintel, roof, and completion stages validated with satellite GPS coordinates before PFMS tranche trigger.' },
+        { title: 'Direct Aadhaar DBT to Bank Account', status: 'info', detail: 'Average latency of 48 hours between field inspector geo-tagging approval and beneficiary bank credit.' },
+        { title: 'Title Registration Verification', status: 'success', detail: 'Zero unverified land deed titles recorded; 74.2% sole or joint ownership registered in female family head names.' }
+      ],
+      trackingSystem: 'AwaasSoft + AwaasApp Geo-telemetry + PFMS Direct DBT Gateways'
+    }
+  ];
+
+  // Scheme Modal State
+  isSchemeModalOpen = false;
+  selectedScheme: SchemeTelemetry | null = null;
+  activeSchemeTab: 'kpis' | 'pacing' | 'states' | 'alerts' = 'kpis';
+
   featuredEvent: EventItem = {
     id: 'featured-national-workshop',
     tag: 'LATEST NATIONAL EVENT',
@@ -2373,12 +4530,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ══ CAROUSEL LOGIC ══
+  // ══ INFINITE CIRCULAR CAROUSEL LOGIC ══
   startAutoSlide() {
     this.pauseCarousel();
     this.autoSlideTimer = setInterval(() => {
       this.nextSlide();
-    }, 6500);
+    }, 4000); // Peppier, smoother pace
   }
 
   pauseCarousel() {
@@ -2393,36 +4550,85 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   nextSlide() {
-    this.currentSlideIndex = (this.currentSlideIndex + 1) % this.carouselSlides.length;
+    this.currentVirtualIndex++;
   }
 
   prevSlide() {
-    this.currentSlideIndex = (this.currentSlideIndex - 1 + this.carouselSlides.length) % this.carouselSlides.length;
+    this.currentVirtualIndex--;
   }
 
-  goToSlide(index: number) {
-    this.currentSlideIndex = index;
+  onTransitionEnd() {
+    const count = this.carouselSlides.length; // 5
+    // Seamless silent modulo reset when sliding out of middle set
+    if (this.currentVirtualIndex >= count * 2) {
+      this.isTransitionDisabled = true;
+      this.currentVirtualIndex -= count;
+      setTimeout(() => {
+        this.isTransitionDisabled = false;
+      }, 30);
+    } else if (this.currentVirtualIndex < count) {
+      this.isTransitionDisabled = true;
+      this.currentVirtualIndex += count;
+      setTimeout(() => {
+        this.isTransitionDisabled = false;
+      }, 30);
+    }
   }
 
-  getPrevIndex(): number {
-    return (this.currentSlideIndex - 1 + this.carouselSlides.length) % this.carouselSlides.length;
+  getRealIndex(): number {
+    const count = this.carouselSlides.length;
+    return ((this.currentVirtualIndex % count) + count) % count;
   }
 
-  getNextIndex(): number {
-    return (this.currentSlideIndex + 1) % this.carouselSlides.length;
+  goToRealSlide(realIndex: number) {
+    const currentReal = this.getRealIndex();
+    let diff = realIndex - currentReal;
+    if (diff > 2) diff -= 5;
+    if (diff < -2) diff += 5;
+    this.currentVirtualIndex += diff;
   }
 
   onCardClick(index: number) {
-    if (index !== this.currentSlideIndex) {
-      this.goToSlide(index);
+    if (index !== this.currentVirtualIndex) {
+      this.currentVirtualIndex = index;
     }
   }
 
   getTrackTransform(): string {
     const cardWidthPercent = 70;
-    const centerOffset = (100 - cardWidthPercent) / 2; // 15%
-    const offset = centerOffset - (this.currentSlideIndex * cardWidthPercent);
+    const centerOffset = 15; // (100 - 70) / 2
+    const offset = centerOffset - (this.currentVirtualIndex * cardWidthPercent);
     return `translateX(${offset}%)`;
+  }
+
+  // ══ SCHEME TELEMETRY MODAL METHODS ══
+  openSchemeModal(scheme: SchemeTelemetry, event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.selectedScheme = scheme;
+    this.activeSchemeTab = 'kpis';
+    this.isSchemeModalOpen = true;
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  closeSchemeModal() {
+    this.isSchemeModalOpen = false;
+    this.selectedScheme = null;
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
+  }
+
+  getPacingClass(status: string): string {
+    switch (status) {
+      case 'Optimal': return 'pacing-optimal';
+      case 'Accelerated': return 'pacing-accelerated';
+      default: return 'pacing-review';
+    }
   }
 
   // ══ MODAL LOGIC (COMPACT & VIEWPORT LOCKED) ══

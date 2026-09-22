@@ -30,6 +30,58 @@ const chart3dEffectsPlugin = {
   }
 };
 
+// Mathematically center the telemetry badge inside the doughnut hole across all viewports
+const torusCenterPlugin = {
+  id: 'torusCenterPositioner',
+  afterLayout(chart: any) {
+    if (chart.config?.type !== 'doughnut') return;
+    const canvas = chart.canvas;
+    const container = canvas?.parentElement;
+    if (!container) return;
+    const badge = container.querySelector('.torus-center-telemetry') as HTMLElement;
+    if (!badge) return;
+
+    let cx: number | null = null;
+    let cy: number | null = null;
+
+    const meta = chart.getDatasetMeta(0);
+    if (meta && meta.data && meta.data.length > 0 && meta.data[0]) {
+      cx = meta.data[0].x;
+      cy = meta.data[0].y;
+    } else if (chart.chartArea) {
+      cx = (chart.chartArea.left + chart.chartArea.right) / 2;
+      cy = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+    }
+
+    if (cx !== null && cy !== null && !isNaN(cx) && !isNaN(cy) && cx > 0 && cy > 0) {
+      const offsetX = canvas.offsetLeft || 0;
+      const offsetY = canvas.offsetTop || 0;
+      badge.style.left = `${Math.round(offsetX + cx)}px`;
+      badge.style.top = `${Math.round(offsetY + cy)}px`;
+    }
+  },
+  afterRender(chart: any) {
+    if (chart.config?.type !== 'doughnut') return;
+    const canvas = chart.canvas;
+    const container = canvas?.parentElement;
+    if (!container) return;
+    const badge = container.querySelector('.torus-center-telemetry') as HTMLElement;
+    if (!badge) return;
+
+    const meta = chart.getDatasetMeta(0);
+    if (meta && meta.data && meta.data.length > 0 && meta.data[0]) {
+      const cx = meta.data[0].x;
+      const cy = meta.data[0].y;
+      if (cx > 0 && cy > 0) {
+        const offsetX = canvas.offsetLeft || 0;
+        const offsetY = canvas.offsetTop || 0;
+        badge.style.left = `${Math.round(offsetX + cx)}px`;
+        badge.style.top = `${Math.round(offsetY + cy)}px`;
+      }
+    }
+  }
+};
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -826,7 +878,7 @@ const chart3dEffectsPlugin = {
     .torus-center-telemetry {
       position: absolute;
       top: 50%;
-      left: 36%;
+      left: 31.25%;
       transform: translate(-50%, -50%);
       pointer-events: none;
       display: flex;
@@ -834,40 +886,59 @@ const chart3dEffectsPlugin = {
       align-items: center;
       justify-content: center;
       text-align: center;
-      width: 130px;
-    }
-    @media (max-width: 600px) {
-      .torus-center-telemetry { left: 50%; }
+      width: 150px;
+      max-width: 150px;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      z-index: 5;
     }
     .torus-icon {
-      font-size: 1.4rem;
+      font-size: 1.35rem;
+      line-height: 1;
       margin-bottom: 2px;
+      display: inline-block;
+      text-align: center;
     }
     .torus-sub {
       font-size: 0.65rem;
       font-weight: 800;
       color: var(--text-muted);
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
-      max-width: 120px;
+      max-width: 140px;
+      width: 100%;
+      text-align: center;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      display: block;
+      line-height: 1.2;
     }
     .torus-val {
-      font-size: 0.98rem;
+      font-size: 1.05rem;
       font-weight: 800;
       color: var(--text-heading);
       letter-spacing: -0.02em;
+      margin: 2px 0 3px 0;
+      width: 100%;
+      text-align: center;
+      display: block;
+      line-height: 1.1;
     }
     .torus-badge {
-      font-size: 0.62rem;
-      font-weight: 800;
-      padding: 1px 6px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #7C3AED;
+      background: rgba(139, 92, 246, 0.12);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      padding: 1px 8px;
       border-radius: 999px;
-      background: rgba(99, 102, 241, 0.12);
-      color: #4F46E5;
-      margin-top: 2px;
+      letter-spacing: 0.02em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.3;
     }
 
     @keyframes pulseGlow {
@@ -1325,7 +1396,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   error: string | null = null;
   data: DashboardData | null = null;
 
-  chartPlugins = [chart3dEffectsPlugin];
+  chartPlugins = [chart3dEffectsPlugin, torusCenterPlugin];
 
   // Viewport scroll-trigger observer
   scrollObserver: IntersectionObserver | null = null;

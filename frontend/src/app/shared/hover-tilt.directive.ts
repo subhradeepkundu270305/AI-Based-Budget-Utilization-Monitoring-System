@@ -32,7 +32,7 @@ export class HoverTiltDirective {
     this.renderer.setStyle(
       this.el.nativeElement, 
       'transform', 
-      `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`
+      `perspective(1100px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-6px) scale3d(1.02, 1.02, 1.02)`
     );
   }
 
@@ -41,9 +41,9 @@ export class HoverTiltDirective {
     this.renderer.setStyle(
       this.el.nativeElement, 
       'transform', 
-      'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)'
+      'perspective(1100px) rotateX(0deg) rotateY(0deg) translateY(0px) scale3d(1, 1, 1)'
     );
-    this.renderer.setStyle(this.el.nativeElement, 'transition', 'transform 0.3s ease-out');
+    this.renderer.setStyle(this.el.nativeElement, 'transition', 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)');
   }
 
   @HostListener('mouseenter')
