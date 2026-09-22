@@ -207,10 +207,10 @@ export interface InsightItem {
 
             <!-- Join Our Events CTA -->
             <div class="about-cta-row">
-              <button class="btn-orange-cta" (click)="openRegisterModal(carouselSlides[1])">
+              <a [routerLink]="['/event-register']" [queryParams]="{ eventId: 'national-briefing-2025' }" class="btn-orange-cta">
                 <span>JOIN NATIONAL BRIEFINGS</span>
                 <span class="cta-arrow">→</span>
-              </button>
+              </a>
               <a routerLink="/blog" class="link-learn-more">
                 Explore India Fiscal Framework ➔
               </a>
@@ -1246,6 +1246,7 @@ export interface InsightItem {
       border-radius: 9999px;
       border: none;
       cursor: pointer;
+      text-decoration: none;
       box-shadow: 0 6px 18px rgba(234, 88, 12, 0.35);
       transition: all 0.2s ease;
     }

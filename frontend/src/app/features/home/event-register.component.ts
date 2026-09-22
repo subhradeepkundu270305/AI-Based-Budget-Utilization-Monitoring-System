@@ -1238,6 +1238,28 @@ export class EventRegisterComponent implements OnInit {
         { name: 'P. K. Venkataraman', title: 'Director', org: 'National Institute of Public Finance' },
         { name: 'Ananya Sen', title: 'Digital India Research Lead', org: 'Ministry of Electronics & IT' }
       ]
+    },
+    'national-briefing-2025': {
+      id: 'national-briefing-2025',
+      tag: 'GOVERNMENT OF INDIA BRIEFING',
+      title: 'National Briefing: Strengthening Fiscal Accountability & Budget Transparency in India',
+      date: 'Oct 22, 2026',
+      time: '10:00 am – 1:00 pm IST',
+      location: 'Vigyan Bhawan, New Delhi & Live Webcast',
+      type: 'Official National Briefing',
+      description: 'High-level national briefing co-hosted by the Ministry of Finance and State Treasuries on real-time PFMS data telemetry, tracking ₹16.03 Lakh Crore across 36 States & UTs, and eliminating fund absorption bottlenecks.',
+      imageUrl: '/assets/carousel-slide-2.jpg',
+      agenda: [
+        'Real-Time Telemetry Mapping across 780+ Administrative Districts',
+        'Direct Single Nodal Agency (SNA) Settlement Velocity and Zero-Balance Auditing',
+        'State Capex Incentive Schemes and Timely Utilization Certificate Compliance',
+        'Public Financial Management System (PFMS) AI Telemetry Demonstration'
+      ],
+      speakers: [
+        { name: 'Dr. Vivek Joshi', title: 'Secretary (Expenditure)', org: 'Ministry of Finance, GoI' },
+        { name: 'Shri B. V. R. Subrahmanyam', title: 'CEO', org: 'NITI Aayog' },
+        { name: 'Smt. Sonali Singh', title: 'Controller General of Accounts', org: 'PFMS Division' }
+      ]
     }
   };
 
