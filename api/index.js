@@ -9,11 +9,6 @@ let initPromise = null;
 async function initServerless() {
   const env = loadEnv();
   await connectDb(env.mongoUri);
-  try {
-    await ThresholdConfig.getConfig();
-  } catch (err) {
-    console.warn("ThresholdConfig init warning:", err.message);
-  }
   if (!appInstance) {
     appInstance = createApp(env);
   }
@@ -28,6 +23,7 @@ module.exports = async (req, res) => {
     const app = await initPromise;
     return app(req, res);
   } catch (err) {
+    initPromise = null;
     console.error("Vercel Serverless Invocation Error:", err);
     res.status(500).json({
       error: "Internal Server Error",

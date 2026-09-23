@@ -116,13 +116,15 @@ function createAuthController(env) {
         if (!user.isActive) {
           throw new HttpError(403, "Account is deactivated");
         }
-        await writeAudit({
+        // Non-blocking audit write so login responds immediately
+        writeAudit({
           userId: user._id,
           action: "auth.login",
           targetCollection: "User",
           targetId: user._id,
           after: { email: user.email },
-        });
+        }).catch((err) => console.error("Audit log error:", err.message));
+
         return respondWithSession(res, user, env);
       } catch (err) {
         next(err);

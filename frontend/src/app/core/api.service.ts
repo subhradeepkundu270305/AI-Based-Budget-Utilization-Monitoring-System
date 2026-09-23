@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { shareReplay, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   AlertItem,
@@ -15,6 +17,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly api = environment.apiUrl;
+  private cachedDepartments$: Observable<Paginated<Department>> | null = null;
 
   constructor(private http: HttpClient) {}
 
@@ -26,20 +29,38 @@ export class ApiService {
     return p;
   }
 
-  departments(page = 1, limit = 50) {
+  departments(page = 1, limit = 50, force = false): Observable<Paginated<Department>> {
+    if (page === 1 && !force) {
+      if (!this.cachedDepartments$) {
+        this.cachedDepartments$ = this.http
+          .get<Paginated<Department>>(`${this.api}/departments`, { params: this.params({ page, limit }) })
+          .pipe(shareReplay(1));
+      }
+      return this.cachedDepartments$;
+    }
     return this.http.get<Paginated<Department>>(`${this.api}/departments`, { params: this.params({ page, limit }) });
   }
 
+  clearDepartmentsCache() {
+    this.cachedDepartments$ = null;
+  }
+
   createDepartment(body: Partial<Department>) {
-    return this.http.post<{ data: Department }>(`${this.api}/departments`, body);
+    return this.http
+      .post<{ data: Department }>(`${this.api}/departments`, body)
+      .pipe(tap(() => this.clearDepartmentsCache()));
   }
 
   updateDepartment(id: string, body: Partial<Department>) {
-    return this.http.patch<{ data: Department }>(`${this.api}/departments/${id}`, body);
+    return this.http
+      .patch<{ data: Department }>(`${this.api}/departments/${id}`, body)
+      .pipe(tap(() => this.clearDepartmentsCache()));
   }
 
   deleteDepartment(id: string) {
-    return this.http.delete(`${this.api}/departments/${id}`);
+    return this.http
+      .delete(`${this.api}/departments/${id}`)
+      .pipe(tap(() => this.clearDepartmentsCache()));
   }
 
   users(query: Record<string, string | number | undefined> = {}) {

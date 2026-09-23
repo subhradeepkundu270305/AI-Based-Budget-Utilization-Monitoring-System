@@ -175,42 +175,45 @@ const reportController = {
 
   dashboard: async (req, res, next) => {
     try {
-      const summaries = await buildDepartmentSummaries(req.user, req.query);
-      const allocated = summaries.reduce((s, d) => s + d.allocated, 0);
-      const spent = summaries.reduce((s, d) => s + d.spent, 0);
-      const alertFilter = { resolved: false };
       const scope = departmentScope(req.user);
+      const alertFilter = { resolved: false };
       if (scope) alertFilter.departmentId = scope;
-      const openAlerts = await Alert.countDocuments(alertFilter);
-      const alertsByType = await Alert.aggregate([
-        { $match: alertFilter },
-        { $group: { _id: "$type", count: { $sum: 1 } } },
-      ]);
 
       const trendMatch = {};
       if (scope) {
         const ids = await Budget.find({ department: scope }).distinct("_id");
         trendMatch.budgetId = { $in: ids };
       }
-      const trend = await Expenditure.aggregate([
-        { $match: trendMatch },
-        {
-          $group: {
-            _id: { $dateToString: { format: "%Y-%m", date: "$date" } },
-            spent: { $sum: "$amountSpent" },
+
+      // Execute all 5 data queries in parallel
+      const [summaries, openAlerts, alertsByType, trend, byCategory] = await Promise.all([
+        buildDepartmentSummaries(req.user, req.query),
+        Alert.countDocuments(alertFilter),
+        Alert.aggregate([
+          { $match: alertFilter },
+          { $group: { _id: "$type", count: { $sum: 1 } } },
+        ]),
+        Expenditure.aggregate([
+          { $match: trendMatch },
+          {
+            $group: {
+              _id: { $dateToString: { format: "%Y-%m", date: "$date" } },
+              spent: { $sum: "$amountSpent" },
+            },
           },
-        },
-        { $sort: { _id: 1 } },
-        { $limit: 24 },
+          { $sort: { _id: 1 } },
+          { $limit: 24 },
+        ]),
+        Expenditure.aggregate([
+          { $match: trendMatch },
+          { $group: { _id: "$category", spent: { $sum: "$amountSpent" } } },
+          { $sort: { spent: -1 } },
+          { $limit: 8 },
+        ]),
       ]);
 
-      const categoryAggMatch = { ...trendMatch };
-      const byCategory = await Expenditure.aggregate([
-        { $match: categoryAggMatch },
-        { $group: { _id: "$category", spent: { $sum: "$amountSpent" } } },
-        { $sort: { spent: -1 } },
-        { $limit: 8 },
-      ]);
+      const allocated = summaries.reduce((s, d) => s + d.allocated, 0);
+      const spent = summaries.reduce((s, d) => s + d.spent, 0);
 
       res.json({
         kpis: {

@@ -1,19 +1,35 @@
 const mongoose = require("mongoose");
 
-let cachedConnection = null;
+let cached = global._mongooseConn;
+
+if (!cached) {
+  cached = global._mongooseConn = { conn: null, promise: null };
+}
 
 async function connectDb(uri) {
-  if (mongoose.connection.readyState >= 1) {
-    return mongoose.connection;
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn;
   }
-  if (!cachedConnection) {
+
+  if (!cached.promise || mongoose.connection.readyState === 0) {
     mongoose.set("strictQuery", true);
-    cachedConnection = mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 8000,
-    });
+    cached.promise = mongoose.connect(uri, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
+    }).then((m) => m.connection);
   }
-  await cachedConnection;
-  return mongoose.connection;
+
+  try {
+    cached.conn = await cached.promise;
+  } catch (err) {
+    cached.promise = null;
+    cached.conn = null;
+    throw err;
+  }
+
+  return cached.conn;
 }
 
 module.exports = { connectDb };
