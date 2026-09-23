@@ -27,11 +27,13 @@ export class BlogDataService {
 However, the India Budget Transparency Review 2025 highlights key areas for advancement: while national-level budget transparency and legislative oversight score high (82/100 and 91/100 respectively), institutional mechanisms for direct citizen participation at the municipal and panchayat levels require deeper statutory backing.
 
 ### Key National Findings
+
 1. **The Digital Leap**: Central and State governments now publish granular expenditure heads online in real-time, providing unprecedented visibility into the ₹48.2 Lakh Crore national budget pipeline.
 2. **The Social Audit Frontier**: While MGNREGA mandates institutionalized Gram Sabha social audits, extending similar community scorecards to Centrally Sponsored Schemes like Jal Jeevan Mission and PMGSY is essential.
 3. **Sub-National Disbursal Acceleration**: The transition to Single Nodal Agency (SNA) accounts under PFMS has reduced parked state funds by over 42%, ensuring just-in-time treasury releases to district implementation agencies.
 
 ### Policy Pathways for 2026-2030
+
 To convert digital transparency into grassroots social impact, policy frameworks must mandate citizen-facing executive budget summaries in regional languages, institutionalize quarterly district development coordination hearings (DISHA), and deploy automated AI alert engines that prevent funds from lapsing before reaching primary healthcare and rural school facilities.`,
       category: 'Fiscal Federalism',
       author: 'Dr. Sanjeev Sanyal & Vivek Ramkumar',
@@ -49,6 +51,7 @@ To convert digital transparency into grassroots social impact, policy frameworks
 An empirical analysis across 36 States and Union Territories indicates that while aggregate gender allocations have crossed ₹3.2 Lakh Crore in FY 2025-26, bridging the gap requires embedding gender audit metrics into core infrastructure investments such as last-mile rural transport, street lighting, and piped sanitation.
 
 ### Key Observations
+
 - In high-performing districts where Direct Benefit Transfers for maternal nutrition (PMMVY) are integrated with frontline ASHA digital reporting, scheme drop-off rates fell by 31%.
 - Linking women self-help groups (SHGs) under Deendayal Antyodaya Yojana (DAY-NRLM) with community procurement tenders has enabled ₹42,000 Cr in direct micro-enterprise economic value.`,
       category: 'Gender Budgeting',
@@ -66,6 +69,7 @@ An empirical analysis across 36 States and Union Territories indicates that whil
 By auditing procurement tenders and contractor payment milestones through digital treasury interfaces, city administrators can ensure that capital expenditure for permanent STP infrastructure is prioritized over recurring short-term operational leases.
 
 ### Six Policy Recommendations for Urban Local Bodies
+
 1. Transition from manual municipal voucher audits to PFMS-integrated e-billing.
 2. Establish citizen ward committees for public verification of sanitation asset completion.
 3. Integrate real-time IoT sensor data into municipal waste transport billing to eliminate ghost mileage claims.
@@ -87,6 +91,7 @@ By auditing procurement tenders and contractor payment milestones through digita
 Traditionally, public expenditure audit was retrospective, analyzing vouchers long after funds had been spent or unspent balances had lapsed at financial year-end.
 
 ### Real-World AI Interventions in India
+
 - **Automated Pacing Anomaly Engines**: Machine learning algorithms compare daily departmental burn rates against historic seasonal benchmarks. If a department rushes to spend 65% of its capital grant in the final 15 days of March, the system flags a "March Rush" anomaly alert in real-time.
 - **Contractor Duplicate Detection**: Natural Language Processing models identify duplicate GSTIN billings, overlapping invoice line items, and undisclosed vendor ties across state and central e-procurement portals.
 - **Predictive DBT Reconciliation**: Predictive models forecast Aadhaar payment bridge settlement delays and bank server timeouts, enabling proactive re-routing before welfare transfers stall.`,

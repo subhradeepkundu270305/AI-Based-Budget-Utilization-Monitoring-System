@@ -9,32 +9,33 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
   imports: [CommonModule, HoverTiltDirective],
   template: `
     <div *ngIf="!selectedArticle" class="insights-container">
-      <header class="page-head animate-fade-in-up">
+      <!-- Unified Aligned Page Header -->
+      <header class="insights-header-box animate-fade-in-up">
         <div class="head-pill-tag">
           <span class="pulse-beacon"></span>
           <span>Sovereign Fiscal Intelligence &amp; Policy Telemetry</span>
         </div>
         <h1 class="page-title">Insights &amp; Fiscal Analysis</h1>
-        <p class="page-subtitle muted">
+        <p class="page-subtitle">
           Empirical investigations on public expenditure velocity, treasury single accounts, DBT pipelining, and scheme utilization across India's 36 States and UTs.
         </p>
       </header>
 
-      <!-- Filters -->
-      <div class="tab-bar-wrapper animate-fade-in-up delay-100">
-        <div class="tab-bar">
+      <!-- Symmetric Category Navigation Bar -->
+      <nav class="category-nav-bar animate-fade-in-up delay-100" aria-label="Article categories">
+        <div class="category-pills-row">
           <button 
             *ngFor="let cat of categories" 
-            class="tab-btn"
+            class="category-btn"
             [class.active]="selectedCategory === cat"
             (click)="filterByCategory(cat)">
-            <span>{{ cat }}</span>
-            <span class="tab-count-badge">{{ getCategoryCount(cat) }}</span>
+            <span class="cat-name">{{ cat }}</span>
+            <span class="cat-count">{{ getCategoryCount(cat) }}</span>
           </button>
         </div>
-      </div>
+      </nav>
 
-      <!-- Hero Article -->
+      <!-- Hero Article with 3D Metallic Depth -->
       <section 
         *ngIf="featuredArticle && selectedCategory === 'All'" 
         class="hero-article animate-fade-in-up delay-200" 
@@ -42,7 +43,8 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
         [maxTilt]="3"
         (click)="openArticle(featuredArticle)">
         
-        <div class="hero-glow-bar"></div>
+        <div class="hero-metallic-bar"></div>
+        
         <div class="hero-image-wrap">
           <div class="hero-image" [style.backgroundImage]="'url(' + featuredArticle.imageUrl + ')'"></div>
           <div class="hero-image-overlay"></div>
@@ -89,20 +91,20 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
         </div>
       </section>
 
-      <!-- Article Grid (4x2 Balanced Layout with Pro 3D Depth) -->
+      <!-- Article Grid (Balanced 4x2 Layout with Metallic 3D Visual Depth) -->
       <section class="blog-grid">
         <article 
           *ngFor="let post of gridArticles; let i = index" 
           class="blog-card card animate-fade-in-up" 
-          [ngStyle]="{'animation-delay': (150 + (i * 50)) + 'ms'}"
+          [ngStyle]="{'animation-delay': (120 + (i * 45)) + 'ms'}"
           appHoverTilt
-          [maxTilt]="6"
+          [maxTilt]="5"
           (click)="openArticle(post)">
           
-          <!-- 3D Top Accent Glow Bar -->
-          <div class="card-glow-bar"></div>
+          <!-- 3D Metallic Top Shimmer Bar -->
+          <div class="card-metallic-shimmer"></div>
 
-          <!-- Card Image Wrap with Parallax Hover Zoom & Floating Chips -->
+          <!-- Card Image Wrap with Parallax Hover Zoom & Floating Badges -->
           <div class="card-img-wrap">
             <div class="card-img" [style.backgroundImage]="'url(' + post.imageUrl + ')'"></div>
             <div class="card-img-overlay"></div>
@@ -193,9 +195,12 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       </div>
 
       <div class="article-body">
-        <p class="lead">{{ selectedArticle.excerpt }}</p>
+        <div class="lead-box">
+          <div class="lead-quote-mark">“</div>
+          <p class="lead">{{ selectedArticle.excerpt }}</p>
+        </div>
         
-        <!-- Enhanced Content Formatting -->
+        <!-- Structured Content Formatting with Numbered Point Cards -->
         <div class="content-text" [innerHTML]="formatContent(selectedArticle.content)"></div>
         
         <!-- Related Articles Section -->
@@ -212,6 +217,7 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
               appHoverTilt
               [maxTilt]="5"
               (click)="openArticle(rel)">
+              <div class="card-metallic-shimmer"></div>
               <div class="card-img-wrap" style="height: 150px;">
                 <div class="card-img" [style.backgroundImage]="'url(' + rel.imageUrl + ')'"></div>
                 <div class="card-img-overlay"></div>
@@ -243,7 +249,15 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       padding-bottom: 3.5rem;
     }
 
-    /* Page Header */
+    /* ══ UNIFIED LEFT-ALIGNED HEADER ══ */
+    .insights-header-box {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      margin-bottom: 2rem;
+    }
+
     .head-pill-tag {
       display: inline-flex;
       align-items: center;
@@ -253,11 +267,11 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       background: rgba(13, 148, 136, 0.08);
       border: 1px solid rgba(13, 148, 136, 0.22);
       color: #0F766E;
-      font-size: 0.78rem;
-      font-weight: 600;
+      font-size: 0.76rem;
+      font-weight: 700;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      margin-bottom: 0.85rem;
+      margin-bottom: 0.75rem;
     }
 
     .pulse-beacon {
@@ -276,70 +290,70 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
     }
 
     .page-title {
-      font-size: 2.25rem;
+      font-size: 2.35rem;
       font-weight: 800;
       color: #0F172A;
       letter-spacing: -0.025em;
-      margin: 0 0 0.5rem 0;
+      margin: 0 0 0.55rem 0;
       line-height: 1.2;
     }
 
     .page-subtitle {
       font-size: 1.05rem;
       color: #475569;
-      max-width: 760px;
-      line-height: 1.55;
-      margin: 0 0 2rem 0;
+      max-width: 820px;
+      line-height: 1.6;
+      margin: 0;
     }
 
-    /* Tab Filters */
-    .tab-bar-wrapper {
-      margin-bottom: 2.25rem;
-      overflow-x: auto;
-      padding-bottom: 0.5rem;
+    /* ══ SYMMETRIC CATEGORY NAVIGATION PILLS ══ */
+    .category-nav-bar {
+      margin-bottom: 2.5rem;
+      width: 100%;
     }
 
-    .tab-bar {
+    .category-pills-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .category-btn {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      background: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 0.35rem;
+      padding: 0.45rem 1rem;
       border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
-    }
-
-    .tab-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      padding: 0.5rem 1.1rem;
-      border-radius: 999px;
-      border: 1px solid transparent;
-      background: transparent;
-      color: #475569;
-      font-size: 0.85rem;
+      border: 1px solid rgba(203, 213, 225, 0.75);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: #334155;
+      font-size: 0.84rem;
       font-weight: 600;
       cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
     }
 
-    .tab-btn:hover {
-      color: #0F172A;
-      background: rgba(255, 255, 255, 0.9);
+    .category-btn:hover {
+      background: #FFFFFF;
+      color: #0D9488;
+      border-color: rgba(13, 148, 136, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.12), inset 0 1px 0 #FFFFFF;
     }
 
-    .tab-btn.active {
-      background: #0D9488;
+    .category-btn.active {
+      background: linear-gradient(135deg, #0D9488 0%, #083E48 100%);
       color: #FFFFFF;
-      box-shadow: 0 4px 14px rgba(13, 148, 136, 0.32);
+      border-color: #0D9488;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(13, 148, 136, 0.32), inset 0 1px 1px rgba(255, 255, 255, 0.3);
     }
 
-    .tab-count-badge {
+    .cat-count {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -347,21 +361,22 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       font-weight: 700;
       padding: 0.1rem 0.45rem;
       border-radius: 999px;
-      background: rgba(15, 23, 42, 0.08);
+      background: rgba(148, 163, 184, 0.18);
       color: #475569;
       line-height: 1;
+      transition: all 0.2s ease;
     }
 
-    .tab-btn.active .tab-count-badge {
+    .category-btn.active .cat-count {
       background: rgba(255, 255, 255, 0.25);
       color: #FFFFFF;
     }
 
-    /* ══ HERO ARTICLE 3D CARD ══ */
+    /* ══ HERO ARTICLE WITH METALLIC BEZEL & 3D DEPTH ══ */
     .hero-article {
       position: relative;
       display: flex;
-      background: rgba(255, 255, 255, 0.88);
+      background: linear-gradient(150deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.90) 100%);
       backdrop-filter: blur(24px) saturate(190%);
       -webkit-backdrop-filter: blur(24px) saturate(190%);
       border-radius: var(--radius-xl);
@@ -369,10 +384,11 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       box-shadow: 
         0 8px 30px -4px rgba(15, 23, 42, 0.07),
         0 20px 40px -10px rgba(13, 148, 136, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        inset 0 1px 1px 0 rgba(255, 255, 255, 1),
+        inset 0 -1px 2px 0 rgba(203, 213, 225, 0.35);
       margin-bottom: 2.75rem;
       cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(226, 232, 240, 0.85);
       transition: box-shadow 0.35s ease, border-color 0.35s ease;
     }
 
@@ -380,18 +396,25 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       box-shadow: 
         0 24px 50px -12px rgba(13, 148, 136, 0.22),
         0 12px 28px -6px rgba(15, 23, 42, 0.08),
-        inset 0 1px 1px rgba(255, 255, 255, 1);
+        inset 0 1px 2px rgba(255, 255, 255, 1),
+        inset 0 -1px 2px rgba(13, 148, 136, 0.15);
       border-color: rgba(13, 148, 136, 0.35);
     }
 
-    .hero-glow-bar {
+    .hero-metallic-bar {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       height: 3.5px;
-      background: linear-gradient(90deg, #0D9488 0%, #06B6D4 50%, #3B82F6 100%);
+      background: linear-gradient(90deg, #0D9488 0%, #2DD4BF 25%, #A7F3D0 45%, #38BDF8 70%, #0D9488 100%);
+      background-size: 200% 100%;
       z-index: 5;
+    }
+
+    .hero-article:hover .hero-metallic-bar {
+      background-position: 100% 0;
+      transition: background-position 1.5s ease;
     }
 
     .hero-image-wrap {
@@ -411,13 +434,13 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
 
     .hero-article:hover .hero-image {
       transform: scale(1.05);
-      filter: brightness(1.03);
+      filter: brightness(1.03) contrast(1.02);
     }
 
     .hero-image-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(15, 23, 42, 0.6) 0%, rgba(15, 23, 42, 0.15) 50%, transparent 100%);
+      background: linear-gradient(to top, rgba(15, 23, 42, 0.65) 0%, rgba(15, 23, 42, 0.15) 50%, transparent 100%);
       pointer-events: none;
     }
 
@@ -432,7 +455,7 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      background: rgba(15, 23, 42, 0.75);
+      background: rgba(15, 23, 42, 0.78);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       color: #F0FDFA;
@@ -587,7 +610,7 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       transition: transform 0.25s ease;
     }
 
-    /* ══ ARTICLE 3D GRID CARDS ══ */
+    /* ══ ARTICLE 3D METALLIC GRID CARDS ══ */
     .blog-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -609,67 +632,84 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       flex-direction: column;
       cursor: pointer;
       border-radius: var(--radius-xl);
-      background: rgba(255, 255, 255, 0.88);
+      background: linear-gradient(150deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.92) 50%, rgba(241, 245, 249, 0.90) 100%);
       backdrop-filter: blur(20px) saturate(180%);
       -webkit-backdrop-filter: blur(20px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(226, 232, 240, 0.85);
       box-shadow: 
-        0 4px 12px -2px rgba(15, 23, 42, 0.05),
-        0 10px 24px -4px rgba(15, 23, 42, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        0 4px 16px -2px rgba(15, 23, 42, 0.05),
+        0 10px 24px -4px rgba(13, 148, 136, 0.05),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 1),
+        inset 0 -1px 2px 0 rgba(203, 213, 225, 0.3);
       transform-style: preserve-3d;
       perspective: 1100px;
       transition: box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease;
     }
 
-    /* Specular light sheen highlight across card on hover */
+    /* Metallic Glint Sweep across card on hover */
     .blog-card::before {
       content: '';
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: -160%;
+      width: 100%;
+      height: 100%;
       background: linear-gradient(
-        125deg,
-        transparent 30%,
-        rgba(255, 255, 255, 0.35) 48%,
-        rgba(255, 255, 255, 0.65) 50%,
-        rgba(255, 255, 255, 0.35) 52%,
-        transparent 70%
+        115deg,
+        transparent 20%,
+        rgba(255, 255, 255, 0.05) 35%,
+        rgba(255, 255, 255, 0.65) 47%,
+        rgba(204, 251, 241, 0.9) 50%,
+        rgba(255, 255, 255, 0.65) 53%,
+        rgba(255, 255, 255, 0.05) 65%,
+        transparent 80%
       );
-      transform: translateX(-150%);
-      transition: transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: skewX(-22deg);
       pointer-events: none;
       z-index: 10;
+      transition: none;
     }
 
     .blog-card:hover::before {
-      transform: translateX(150%);
+      left: 170%;
+      transition: left 0.85s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .blog-card:hover {
       box-shadow: 
-        0 22px 48px -12px rgba(13, 148, 136, 0.22),
-        0 10px 20px -6px rgba(15, 23, 42, 0.08),
-        inset 0 1px 1px rgba(255, 255, 255, 1);
-      border-color: rgba(13, 148, 136, 0.35);
+        0 24px 50px -10px rgba(13, 148, 136, 0.22),
+        0 10px 20px -5px rgba(15, 23, 42, 0.08),
+        inset 0 1px 2px rgba(255, 255, 255, 1),
+        inset 0 -1px 2px rgba(13, 148, 136, 0.15);
+      border-color: rgba(13, 148, 136, 0.42);
     }
 
-    .card-glow-bar {
+    .card-metallic-shimmer {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, #0D9488 0%, #06B6D4 100%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      background: linear-gradient(
+        90deg, 
+        #0D9488 0%, 
+        #2DD4BF 25%, 
+        #A7F3D0 45%, 
+        #38BDF8 65%, 
+        #0D9488 100%
+      );
+      background-size: 200% 100%;
+      opacity: 0.55;
+      transition: opacity 0.35s ease, background-position 1.2s ease;
       z-index: 5;
     }
 
-    .blog-card:hover .card-glow-bar {
+    .blog-card:hover .card-metallic-shimmer {
       opacity: 1;
+      background-position: 100% 0;
     }
 
-    /* Card Image with Parallax Scale & Dark Overlay */
+    /* Card Image with Parallax Scale & Dark Vignette Overlay */
     .card-img-wrap {
       position: relative;
       height: 205px;
@@ -687,7 +727,7 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
 
     .blog-card:hover .card-img {
       transform: scale(1.08);
-      filter: brightness(1.04);
+      filter: brightness(1.03) contrast(1.03);
     }
 
     .card-img-overlay {
@@ -712,7 +752,7 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      background: rgba(15, 23, 42, 0.72);
+      background: rgba(15, 23, 42, 0.74);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       color: #F0FDFA;
@@ -722,7 +762,7 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       text-transform: uppercase;
       padding: 0.25rem 0.65rem;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.22);
     }
 
     .chip-dot {
@@ -737,7 +777,7 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       display: inline-flex;
       align-items: center;
       gap: 0.3rem;
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.88);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       color: #0F172A;
@@ -745,7 +785,7 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       font-weight: 600;
       padding: 0.25rem 0.55rem;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.75);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
@@ -867,7 +907,7 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       transform: translateX(2px);
     }
 
-    /* ══ ARTICLE DETAIL VIEW ══ */
+    /* ══ ARTICLE DETAIL VIEW (REFINED & PRO STRUCTURED) ══ */
     .article-detail {
       max-width: 860px;
       margin: 0 auto;
@@ -880,7 +920,7 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       gap: 0.5rem;
       padding: 0.55rem 1.15rem;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.88);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(148, 163, 184, 0.3);
       color: #0F172A;
@@ -1019,61 +1059,182 @@ import { HoverTiltDirective } from '../../shared/hover-tilt.directive';
       color: #334155;
     }
 
-    .article-body .lead {
-      font-size: 1.3rem;
+    .lead-box {
+      position: relative;
+      background: rgba(240, 253, 250, 0.75);
+      border-left: 4px solid #0D9488;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 2.5rem;
+      border-top: 1px solid rgba(13, 148, 136, 0.15);
+      border-right: 1px solid rgba(13, 148, 136, 0.15);
+      border-bottom: 1px solid rgba(13, 148, 136, 0.15);
+    }
+
+    .lead-quote-mark {
+      position: absolute;
+      top: 0.25rem;
+      right: 1rem;
+      font-size: 3.5rem;
+      line-height: 1;
+      color: rgba(13, 148, 136, 0.12);
+      font-family: serif;
+      pointer-events: none;
+    }
+
+    .lead-box .lead {
+      font-size: 1.22rem;
       color: #0F172A;
       font-weight: 500;
-      line-height: 1.6;
-      margin-bottom: 2.25rem;
-      padding-left: 1.25rem;
-      border-left: 4px solid #0D9488;
+      line-height: 1.65;
+      margin: 0;
     }
 
-    ::ng-deep .content-text p {
-      margin-bottom: 1.5rem;
+    /* ══ CONTENT TEXT FORMATTING ══ */
+    ::ng-deep .content-text .detail-p {
+      font-size: 1.12rem;
+      line-height: 1.85;
+      color: #334155;
+      margin-bottom: 1.75rem;
     }
 
-    ::ng-deep .content-text .article-h2 {
-      font-size: 1.65rem;
-      font-weight: 800;
-      color: #0F172A;
-      margin: 2.5rem 0 1.25rem 0;
-      line-height: 1.3;
-    }
-
-    ::ng-deep .content-text .article-h3 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: #0F172A;
-      margin: 2rem 0 1rem 0;
-      line-height: 1.4;
+    ::ng-deep .content-text .detail-h3-wrap {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
+      margin: 2.75rem 0 1.35rem 0;
     }
 
-    ::ng-deep .content-text .article-h3::before {
-      content: '';
-      display: inline-block;
-      width: 8px;
-      height: 8px;
+    ::ng-deep .content-text .h3-teal-bar {
+      width: 4px;
+      height: 24px;
+      border-radius: 999px;
+      background: linear-gradient(to bottom, #0D9488, #2DD4BF);
+      box-shadow: 0 0 8px rgba(13, 148, 136, 0.4);
+    }
+
+    ::ng-deep .content-text .detail-h3 {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    ::ng-deep .content-text .detail-h2-wrap {
+      margin: 3rem 0 1.5rem 0;
+    }
+
+    ::ng-deep .content-text .detail-h2 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    ::ng-deep .content-text .detail-ol {
+      list-style: none;
+      padding: 0;
+      margin: 1.5rem 0 2.25rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+
+    ::ng-deep .content-text .detail-ol-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.15rem;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.4rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03), inset 0 1px 0 #FFFFFF;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    ::ng-deep .content-text .detail-ol-item:hover {
+      transform: translateX(4px);
+      box-shadow: 0 8px 20px rgba(13, 148, 136, 0.12), inset 0 1px 0 #FFFFFF;
+      border-color: rgba(13, 148, 136, 0.35);
+    }
+
+    ::ng-deep .content-text .detail-num-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #0D9488 0%, #083E48 100%);
+      color: #FFFFFF;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      box-shadow: 0 3px 8px rgba(13, 148, 136, 0.3);
+      flex-shrink: 0;
+    }
+
+    ::ng-deep .content-text .detail-ul {
+      list-style: none;
+      padding: 0;
+      margin: 1.5rem 0 2.25rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    ::ng-deep .content-text .detail-ul-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.15rem;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+      border-radius: var(--radius-md);
+      padding: 1.15rem 1.35rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03), inset 0 1px 0 #FFFFFF;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    ::ng-deep .content-text .detail-ul-item:hover {
+      transform: translateX(4px);
+      box-shadow: 0 8px 20px rgba(13, 148, 136, 0.12), inset 0 1px 0 #FFFFFF;
+      border-color: rgba(13, 148, 136, 0.35);
+    }
+
+    ::ng-deep .content-text .detail-bullet-dot {
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
       background: #0D9488;
+      box-shadow: 0 0 8px #2DD4BF;
+      margin-top: 0.65rem;
+      flex-shrink: 0;
     }
 
-    ::ng-deep .content-text .article-list {
-      margin: 1.25rem 0 1.75rem 1.75rem;
-      padding: 0;
+    ::ng-deep .content-text .detail-item-content {
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: #334155;
+      flex: 1;
     }
 
-    ::ng-deep .content-text .article-list li {
-      margin-bottom: 0.75rem;
-      line-height: 1.7;
-    }
-
-    ::ng-deep .content-text strong {
+    ::ng-deep .content-text .detail-bold {
       color: #0F172A;
       font-weight: 700;
+    }
+
+    ::ng-deep .content-text .detail-code {
+      background: rgba(15, 23, 42, 0.06);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.92rem;
+      color: #0F766E;
     }
 
     /* Related Section */
@@ -1171,33 +1332,133 @@ export class BlogComponent implements OnInit {
 
   formatContent(text: string): string {
     if (!text) return '';
-    return text
-      .split('\n\n')
-      .map(paragraph => {
-        let trimmed = paragraph.trim();
-        if (trimmed.startsWith('### ')) {
-          return `<h3 class="article-h3">${trimmed.substring(4)}</h3>`;
+
+    const lines = text.split(/\r?\n/);
+    const htmlBlocks: string[] = [];
+    let inOrderedList = false;
+    let inUnorderedList = false;
+    let currentParagraph: string[] = [];
+
+    const flushParagraph = () => {
+      if (currentParagraph.length > 0) {
+        const rawP = currentParagraph.join(' ').trim();
+        if (rawP) {
+          htmlBlocks.push(`<p class="detail-p">${this.parseInline(rawP)}</p>`);
         }
-        if (trimmed.startsWith('## ')) {
-          return `<h2 class="article-h2">${trimmed.substring(3)}</h2>`;
+        currentParagraph = [];
+      }
+    };
+
+    const closeLists = () => {
+      if (inOrderedList) {
+        htmlBlocks.push('</ol>');
+        inOrderedList = false;
+      }
+      if (inUnorderedList) {
+        htmlBlocks.push('</ul>');
+        inUnorderedList = false;
+      }
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      if (!line) {
+        flushParagraph();
+        closeLists();
+        continue;
+      }
+
+      // Heading 3
+      if (line.startsWith('### ')) {
+        flushParagraph();
+        closeLists();
+        const headingText = this.parseInline(line.substring(4));
+        htmlBlocks.push(`
+          <div class="detail-h3-wrap">
+            <span class="h3-teal-bar"></span>
+            <h3 class="detail-h3">${headingText}</h3>
+          </div>
+        `);
+        continue;
+      }
+
+      // Heading 2
+      if (line.startsWith('## ')) {
+        flushParagraph();
+        closeLists();
+        const headingText = this.parseInline(line.substring(3));
+        htmlBlocks.push(`
+          <div class="detail-h2-wrap">
+            <h2 class="detail-h2">${headingText}</h2>
+          </div>
+        `);
+        continue;
+      }
+
+      // Numbered List
+      const numMatch = line.match(/^(\d+)\.\s+(.*)/);
+      if (numMatch) {
+        flushParagraph();
+        if (inUnorderedList) {
+          htmlBlocks.push('</ul>');
+          inUnorderedList = false;
         }
-        // Bold formatting
-        let formatted = trimmed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        // List items
-        if (trimmed.startsWith('- ') || trimmed.startsWith('1. ') || trimmed.includes('\n- ') || trimmed.includes('\n1. ')) {
-          const lines = trimmed.split('\n');
-          const isOrdered = /^\d+\.\s/.test(lines[0]);
-          const tag = isOrdered ? 'ol' : 'ul';
-          const listItems = lines
-            .map(line => {
-              const cleaned = line.replace(/^[-*]\s+|\d+\.\s+/, '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-              return `<li>${cleaned}</li>`;
-            })
-            .join('');
-          return `<${tag} class="article-list">${listItems}</${tag}>`;
+        if (!inOrderedList) {
+          htmlBlocks.push('<ol class="detail-ol">');
+          inOrderedList = true;
         }
-        return `<p>${formatted}</p>`;
-      })
-      .join('');
+        const num = numMatch[1];
+        const content = this.parseInline(numMatch[2]);
+        htmlBlocks.push(`
+          <li class="detail-ol-item">
+            <span class="detail-num-badge">${num.padStart(2, '0')}</span>
+            <div class="detail-item-content">${content}</div>
+          </li>
+        `);
+        continue;
+      }
+
+      // Bullet List
+      const bulletMatch = line.match(/^[-*]\s+(.*)/);
+      if (bulletMatch) {
+        flushParagraph();
+        if (inOrderedList) {
+          htmlBlocks.push('</ol>');
+          inOrderedList = false;
+        }
+        if (!inUnorderedList) {
+          htmlBlocks.push('<ul class="detail-ul">');
+          inUnorderedList = true;
+        }
+        const content = this.parseInline(bulletMatch[1]);
+        htmlBlocks.push(`
+          <li class="detail-ul-item">
+            <span class="detail-bullet-dot"></span>
+            <div class="detail-item-content">${content}</div>
+          </li>
+        `);
+        continue;
+      }
+
+      // Regular paragraph line
+      if (inOrderedList || inUnorderedList) {
+        closeLists();
+      }
+      currentParagraph.push(line);
+    }
+
+    flushParagraph();
+    closeLists();
+
+    return htmlBlocks.join('\n');
+  }
+
+  parseInline(str: string): string {
+    if (!str) return '';
+    return str
+      .replace(/\*\*(.*?)\*\*/g, (match, p1) => `<strong class="detail-bold">${p1}</strong>`)
+      .replace(/\*(.*?)\*/g, (match, p1) => `<em class="detail-italic">${p1}</em>`)
+      .replace(/`([^`]+)`/g, (match, p1) => `<code class="detail-code">${p1}</code>`);
   }
 }
