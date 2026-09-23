@@ -143,6 +143,36 @@ While front-runner states demonstrate utilization rates exceeding 78% by Q3, sev
       date: 'Nov 14, 2025',
       readTime: '7 min read',
       imageUrl: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&q=80'
+    },
+    {
+      id: 'sna-sparsh-treasury',
+      title: 'SNA-SPARSH & Just-in-Time Funding: Eliminating ₹40,000 Cr in Idle State Float',
+      excerpt: 'How the Ministry of Finance transitioned Centrally Sponsored Schemes from bulk parked advances to zero-balance just-in-time treasury transfers across 36 States.',
+      content: `The implementation of the Single Nodal Agency (SNA) SPARSH model by the Department of Expenditure, Ministry of Finance, represents one of the most consequential structural reforms in Indian public financial administration since the inception of the Public Financial Management System (PFMS).
+
+For decades, the central transfer mechanism for Centrally Sponsored Schemes (CSS) relied on disbursing bulk advance tranches into thousands of commercial bank accounts operated by state departments and implementation societies. This legacy structure resulted in severe fiscal friction: an estimated ₹1.2 Lakh Crore in unspent public funds sat "parked" as idle float, while the Union government continued issuing sovereign treasury bills and paying interest on borrowings to fund daily outlays.
+
+### The Architectural Shift to Just-in-Time Disbursal
+
+Under the SNA-SPARSH paradigm, the parked-money model has been fundamentally dismantled:
+
+1. **Zero-Balance Auxiliary Accounts**: State implementation agencies no longer hold stagnant liquidity balances. Instead, their accounts are pegged as zero-balance ledgers linked directly to the Consolidated Fund of the State in the Reserve Bank of India (RBI).
+2. **Event-Driven Treasury Debits**: Central and State shares of scheme funding are debited only when a validated vendor invoice, work completion certificate, or Direct Benefit Transfer (DBT) debit order is finalized.
+3. **Interest Savings & Debt Compression**: By eliminating ₹40,000+ Crore of persistent idle float across health, rural roads, and water supply grids, the Union government has averted approximately ₹10,500 Crore in annual borrowing interest overheads.
+
+### Empirical Velocity Across 36 States
+
+Data audited across 36 States and Union Territories reveals significant governance dividends:
+- **Disbursement Cycle Compression**: Average turnaround time between project milestone sanction and vendor account credit contracted from 28 days to under 48 hours.
+- **Counterpart Matching Efficiency**: Automated PFMS rules now prevent subsequent Central tranche releases until the corresponding State Matching Share has been verified in the central ledger, curtailing state fiscal diversion.
+
+### The Next Frontier: Algorithmic Verification
+The next phase of SNA-SPARSH integration couples real-time banking rails with automated satellite GIS verification (PM Gati Shakti) and machine learning anomaly engines, ensuring public funds are mobilized only when ground-level physical progress matches expenditure claims.`,
+      category: 'Treasury Reforms',
+      author: 'Sanjay Malhotra & V. Anantha Nageswaran',
+      date: 'Oct 28, 2025',
+      readTime: '8 min read',
+      imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80'
     }
   ];
 
